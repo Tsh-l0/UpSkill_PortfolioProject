@@ -4,6 +4,7 @@ import Home from './pages/Home';
 import Signup from './pages/Signup';
 import Onboarding from './pages/Onboarding';
 import MeetTalent from './pages/MeetTalent';
+import Profile from './pages/Profile';
 
 function App() {
 	return (
@@ -13,6 +14,7 @@ function App() {
 				<Route path="/signup" element={<Signup />} />
 				<Route path="/onboarding" element={<Onboarding />} />
 				<Route path="/talent" element={<MeetTalent />} />
+				<Route path="/profile" element={<Profile />} />
 			</Routes>
 		</Router>
 	);
