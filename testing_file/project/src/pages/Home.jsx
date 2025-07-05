@@ -1,5 +1,7 @@
 import React from 'react';
-import './home.css';
+import { Link } from 'react-router-dom';
+import '../styles/shared.css';
+import '../styles/home.css';
 
 const Home = () => {
 	return (
@@ -19,7 +21,7 @@ const Home = () => {
 			<h1>Building a Better Future Together</h1>
 			<p>Empowering individuals and teams to track and grow their skills.</p>
 			<div className="hero-buttons">
-				<button className="btn primary">Explore Skills</button>
+				<Link to="/signup" className="btn primary">Explore Skills</Link>
 				<button className="btn secondary">Join a Team</button>
 			</div>
 		</section>
@@ -64,4 +66,4 @@ const Home = () => {
 	);
 };
 
-export default Home;
+export default Home

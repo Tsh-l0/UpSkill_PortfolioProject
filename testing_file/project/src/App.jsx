@@ -1,15 +1,15 @@
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
+import Signup from './pages/Signup';
 
 function App() {
 	return (
 		<Router>
-			<div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center text-gray-800">
-				<Routes>
-					<Route path="/" element={<Home />} />
-					{/* We’ll add more routes like /blogs, /signup, etc. later */}
-				</Routes>
-			</div>
+			<Routes>
+				<Route path="/" element={<Home />} />
+				<Route path="/signup" element={<Signup />} />
+			</Routes>
 		</Router>
 	);
 }
