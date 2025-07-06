@@ -1,10 +1,10 @@
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/user.js";
 
 // @desc    Register a new user
 // @route   POST /api/register
-const registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
@@ -13,7 +13,6 @@ const registerUser = async (req, res) => {
       return res.status(400).json({ error: "Email is already in use" });
 
     const hashedPassword = bcrypt.hashSync(password, 10);
-
     const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
 
@@ -25,7 +24,7 @@ const registerUser = async (req, res) => {
 
 // @desc    Log in a user and return token
 // @route   POST /api/login
-const loginUser = async (req, res) => {
+export const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -53,6 +52,4 @@ const loginUser = async (req, res) => {
     return res.status(500).json({ error: "Server error", details: err.message });
   }
 };
-
-module.exports = { registerUser, loginUser };
 
