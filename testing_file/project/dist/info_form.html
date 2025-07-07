@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>User Onboarding - UpSkill</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-12">
+	<div class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+		<h2 class="text-2xl font-bold text-indigo-700 mb-6 text-center">Tell Us About Yourself</h2>
+		<form class="space-y-6">
+
+			<!-- Full Name -->
+			<div>
+				<label for="fullName" class="block text-sm font-medium text-gray-700">Full Name</label>
+				<input id="fullName" type="text" required class="mt-1 w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+			</div>
+
+			<!-- ID Number -->
+			<div>
+				<label for="idNumber" class="block text-sm font-medium text-gray-700">Identification Number</label>
+				<input id="idNumber" type="text" class="mt-1 w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+			</div>
+
+			<!-- Email -->
+			<div>
+				<label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+				<input id="email" type="email" required class="mt-1 w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+			</div>
+
+			<!-- Education Level -->
+			<div>
+				<label for="education" class="block text-sm font-medium text-gray-700">Highest Level of Education</label>
+				<select id="education" class="mt-1 w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500">
+					<option value="">Select an option</option>
+					<option value="high-school">High School</option>
+					<option value="diploma">Diploma / Certificate</option>
+					<option value="degree">Bachelor’s Degree</option>
+					<option value="postgrad">Postgraduate Degree</option>
+				</select>
+			</div>
+
+			<!-- Skills List -->
+			<div>
+				<label for="skills" class="block text-sm font-medium text-gray-700">List of Skills / Competencies</label>
+				<textarea id="skills" rows="3" placeholder="e.g., HTML, JavaScript, Customer Service..." class="mt-1 w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+			</div>
+
+			<!-- Upload Document -->
+			<div>
+				<label for="docUpload" class="block text-sm font-medium text-gray-700">Upload Proof of Qualification (Optional)</label>
+				<input id="docUpload" type="file" class="mt-1 w-full" />
+			</div>
+
+			<!-- Submit Button -->
+			<button type="submit" class="w-full bg-indigo-700 text-white font-semibold py-2 px-4 rounded hover:bg-indigo-800 transition">
+				Submit Information
+			</button>
+		</form>
+	</div>
+</body>
+</html>
