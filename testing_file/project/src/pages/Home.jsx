@@ -1,9 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/shared.css';
 import '../styles/home.css';
 
 const Home = () => {
+	const images = [
+		'/images/slide1.jpg',
+		'/images/slide2.jpg',
+		'/images/slide3.jpg',
+		'/images/test-slide.jpg',
+	];
+
+	const [current, setCurrent] = useState(0);
+
+	useEffect(() => {
+		const interval = setInterval(() => {
+			setCurrent((prev) => (prev + 1) % images.length);
+		}, 4000);
+		return () => clearInterval(interval);
+	}, [images.length]);
+
+
 	return (
 		<div className="homepage">
 		{/* Navbar */}
@@ -17,7 +34,15 @@ const Home = () => {
 		</nav>
 
 		{/* Hero Section */}
-		<section className="hero">
+		<section
+			className="hero"
+			style={{
+				backgroundImage: `url(${images[current]})`,
+				backgroundSize: 'cover',
+				backgroundPosition: 'center',
+				backgroundRepeat: 'no-repeat',
+			}}
+		>
 			<h1>Building a Better Future Together</h1>
 			<p>Empowering individuals and teams to track and grow their skills.</p>
 			<div className="hero-buttons">
