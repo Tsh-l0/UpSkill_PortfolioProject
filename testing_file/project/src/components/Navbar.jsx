@@ -1,11 +1,32 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import '../styles/navbar.css';
+
 const Navbar = () => (
-	<nav className="flex justify-between items-center p-6 shadow-md bg-white fixed w-full z-10">
-		<ul className="hidden md:flex gap-6 text-gray-700">
-			<li><a href="#" className="hover:text-indigo-500">Home</a></li>
-			<li><a href="#" className="hover:text-indigo-500">Blog</a></li>
-			<li><a href="#" className="hover:text-indigo-500">Profile</a></li>
-			<li><a href="#" className="hover:text-indigo-500">Dashboard</a></li>
-		</ul>
+	<nav className="navbar">
+		<div className="navbar-inner">
+
+			{/* Logo */}
+			<div className="navbar-logo">
+				<Link to="/">
+					<img src="/images/logo.png" alt="UpSkill Logo" className="logo-img" />
+				</Link>
+			</div>
+
+			{/* Nav Links */}
+			<ul className="navbar-links">
+				<li><Link to="/">Home</Link></li>
+				<li><Link to="/dead">Blog</Link></li>
+				<li><Link to="/login">Profile</Link></li>
+				<li><Link to="/dead">Dashboard</Link></li>
+			</ul>
+
+			{/* Auth Buttons */}
+			<div className="navbar-auth">
+				<Link to="/signup" className="btn-signup">Sign Up</Link>
+				<Link to="/login" className="btn-signin">Sign In</Link>
+			</div>
+		</div>
 	</nav>
 );
 

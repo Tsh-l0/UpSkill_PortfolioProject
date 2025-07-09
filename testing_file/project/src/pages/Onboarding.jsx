@@ -1,6 +1,7 @@
 import React from 'react';
 import '../styles/shared.css';
 import '../styles/onboarding.css';
+import Navbar from '../components/Navbar';
 
 const Onboarding = () => {
 	return (
