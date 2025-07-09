@@ -1,0 +1,60 @@
+.deadpage-wrapper {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	background: #f9fafb;
+	font-family: sans-serif;
+}
+
+.deadpage-message {
+	text-align: center;
+	background: white;
+	padding: 2rem 3rem;
+	border-radius: 0.75rem;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+	animation: flicker 0.6s infinite;
+}
+
+.deadpage-message h2 {
+	font-size: 1.75rem;
+	color: #dc2626;
+}
+
+.deadpage-message p {
+	font-size: 1rem;
+	color: #4b5563;
+}
+
+@keyframes flicker {
+	0% { opacity: 1; }
+	50% { opacity: 0.85; }
+	100% { opacity: 1; }
+}
+
+.loading-bar {
+	width: 100%;
+	max-width: 300px;
+	height: 8px;
+	background: #e5e7eb;
+	border-radius: 9999px;
+	overflow: hidden;
+	margin: 1.5rem auto 0;
+}
+
+.loading-fill {
+	height: 100%;
+	width: 100%;
+	background: linear-gradient(to right, #4f46e5, #6366f1);
+	transform-origin: left;
+	animation: loading 2s linear infinite;
+}
+
+@keyframes loading {
+	0% {
+		transform: scaleX(0);
+	}
+	100% {
+		transform: scaleX(1);
+	}
+}
