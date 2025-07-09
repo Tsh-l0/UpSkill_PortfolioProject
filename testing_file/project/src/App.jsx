@@ -6,6 +6,7 @@ import Onboarding from './pages/Onboarding';
 import MeetTalent from './pages/MeetTalent';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
+import DeadPage from './pages/DeadPage';
 
 function App() {
 	return (
@@ -17,6 +18,7 @@ function App() {
 				<Route path="/talent" element={<MeetTalent />} />
 				<Route path="/profile" element={<Profile />} />
 				<Route path="/login" element={<Login />} />
+				<Route path="/dead" element={<DeadPage />} />
 			</Routes>
 		</Router>
 	);
