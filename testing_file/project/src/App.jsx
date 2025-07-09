@@ -5,6 +5,7 @@ import Signup from './pages/Signup';
 import Onboarding from './pages/Onboarding';
 import MeetTalent from './pages/MeetTalent';
 import Profile from './pages/Profile';
+import Login from './pages/Login';
 
 function App() {
 	return (
@@ -15,6 +16,7 @@ function App() {
 				<Route path="/onboarding" element={<Onboarding />} />
 				<Route path="/talent" element={<MeetTalent />} />
 				<Route path="/profile" element={<Profile />} />
+				<Route path="/login" element={<Login />} />
 			</Routes>
 		</Router>
 	);
