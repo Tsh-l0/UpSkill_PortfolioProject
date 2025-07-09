@@ -1,8 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import ViewToggle from '../components/ViewToggle';
 import '../styles/shared.css';
 import '../styles/talent.css';
 
 const MeetTalent = () => {
+	const [viewMode, setViewMode] = useState('grid');
+
+	useEffect(() => {
+		const stored = localStorage.getItem('meetTalentView');
+		if (stored) setViewMode(stored);
+	}, []);
+
+	const handleViewChange = (mode) => {
+		setViewMode(mode);
+		localStorage.setItem('meetTalentView', mode);
+	};
+
 	const people = [
 		{
 			initials: 'JD',
@@ -30,9 +43,11 @@ const MeetTalent = () => {
 	return (
 		<section className="talent-section">
 			<h1 className="talent-heading">Meet the Talent</h1>
-			<div className="talent-grid">
+			<ViewToggle currentView={viewMode} setView={handleViewChange} />
+			
+			<div className={`talent-grid ${viewMode}`}>
 				{people.map((person, index) => (
-					<div className="talent-card" key={index}>
+					<div className={`talent-card ${viewMode}`} key={index}>
 						<div className="talent-header">
 							<div className="talent-initials">{person.initials}</div>
 							<div className="talent-info">
@@ -45,10 +60,10 @@ const MeetTalent = () => {
 							{person.skills.map((skill, i) => (
 								<span className="skill-pill" key={i}>{skill}</span>
 							))}
+						</div>
 					</div>
+				))}
 			</div>
-		))}
-		</div>
 		</section>
 	);
 };
