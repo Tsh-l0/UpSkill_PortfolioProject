@@ -1,6 +1,6 @@
 const Skill = require('../models/Skill')
 
-// 📌 Create a new skill
+//  Create a new skill
 const createSkill = async (req, res) => {
   try {
     const skill = await Skill.create({
@@ -13,7 +13,7 @@ const createSkill = async (req, res) => {
   }
 }
 
-// 📌 Get all skills (optionally filtered by category)
+//  Get all skills (optionally filtered by category)
 const getSkills = async (req, res) => {
   try {
     const filter = {}
@@ -31,7 +31,7 @@ const getSkills = async (req, res) => {
   }
 }
 
-// 📌 Endorse a skill (add user to endorsements array)
+//  Endorse a skill (add user to endorsements array)
 const endorseSkill = async (req, res) => {
   try {
     const { id } = req.params
@@ -55,7 +55,7 @@ const endorseSkill = async (req, res) => {
   }
 }
 
-// 📌 Delete a skill (admin or creator only)
+//  Delete a skill (admin or creator only)
 const deleteSkill = async (req, res) => {
   try {
     const { id } = req.params
@@ -80,10 +80,33 @@ const deleteSkill = async (req, res) => {
   }
 }
 
+const updateSkill = async (req, res) => {
+  try {
+    // For example: find by ID and update
+    const updated = await Skill.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Skill not found' });
+    }
+
+    res.status(200).json(updated);
+  } catch (error) {
+    console.error('Update error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 module.exports = {
   createSkill,
   getSkills,
   endorseSkill,
   deleteSkill,
-}
+  updateSkill
+};
+
 

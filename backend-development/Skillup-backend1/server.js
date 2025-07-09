@@ -1,39 +1,40 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const cors = require("cors");
+require("dotenv").config(); // ⬅️ Moved this to the top to load envs ASAP
 
-//  Import Routes
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+
+// 🌐 Routes
 const authRoutes = require("./routes/auth.routes");
 const skillRoutes = require("./routes/skill.routes");
+const userRoutes = require("./routes/user.routes");
 
-// Middleware
+// 🛡️ Middleware
 const errorHandler = require("./middlewares/errorHandler");
-
-dotenv.config();
 
 const app = express();
 
-//  Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log(" MongoDB connected"))
-  .catch((err) => console.error("MongoDB connection error:", err));
+// 🚀 Connect to MongoDB
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-//  Middleware
+// 🧩 Middleware stack
 app.use(cors());
 app.use(express.json());
 
-//  Routes
+// 🚏 Route mounting
 app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
+app.use("/api/users", userRoutes); // ✅ Mounted new users route
+app.use("/api/users", userRoutes);
 
-//  Catch-All Error Middleware 
+// 🔥 Error handling
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 5000;
+// 🖥️ Start the server
+const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });
