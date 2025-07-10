@@ -18,32 +18,32 @@ var app = express();
 mongoose
   .connect(process.env.MONGO_URI)
   .then(function () {
-    console.log("✅ MongoDB connected");
+    console.log("MongoDB connected");
   })
   .catch(function (err) {
-    console.error("❌ MongoDB connection error:", err);
+    console.error("MongoDB connection error:", err);
   });
 
-// 🧩 Middleware stack
+// Middleware stack
 app.use(cors());
 app.use(express.json());
 
-// 🚏 Route mounting
+//Route mounting
 app.use("/api/auth", authRoutes);
 app.use("/api/skills", skillRoutes);
 app.use("/api/users", userRoutes);
 
-// ✅ Root route to confirm backend is alive
+// Root route to confirm backend is alive
 app.get("/", function (req, res) {
   res.send("UpSkill backend is running 🔧");
 });
 
-// 🔥 Error handling
+//Error handling
 app.use(errorHandler);
 
-// 🖥️ Start the server
+//Start the server
 var PORT = process.env.PORT || 5000;
 app.listen(PORT, function () {
-  console.log("🚀 Server running on port " + PORT);
+  console.log("Server running on port " + PORT);
 });
 

@@ -16,8 +16,8 @@ app.use(express.json());
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("✅ MongoDB connected"))
-  .catch((err) => console.error("❌ MongoDB error:", err));
+  .then(() => console.log(" MongoDB connected"))
+  .catch((err) => console.error(" MongoDB error:", err));
 
 // Mount routes
 app.use("/api/auth", authRoutes);
@@ -25,7 +25,7 @@ app.use("/api/skills", skillRoutes);
 
 // Health check route
 app.get("/", (req, res) => {
-  res.send("SkillUp Backend API is running 🚀");
+  res.send("SkillUp Backend API is running ");
 });
 
 module.exports = app;

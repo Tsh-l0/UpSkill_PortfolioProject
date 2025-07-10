@@ -5,7 +5,7 @@ const { verifyToken } = require("../middlewares/auth.middleware");
 const authorizeRoles = require("../middlewares/authorizeRoles");
 const User = require("../models/User");
 
-// 🧠 Authenticated user info
+//Authenticated user info
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select("-password");
@@ -17,10 +17,10 @@ router.get("/me", verifyToken, async (req, res) => {
   }
 });
 
-// 🛡 Admin-only route
+//Admin-only route
 router.get("/admin-only", verifyToken, authorizeRoles("admin"), (req, res) => {
   res.json({
-    message: `Hello Admin ${req.user.userId}, welcome to the command deck 👨🏽‍✈️`,
+    message: `Hello Admin ${req.user.userId}, welcome to the command deck ‍,
   });
 });
 

@@ -29,7 +29,7 @@ router.post(
   loginUser
 );
 
-// ✅ Protected route to get the authenticated user's info
+//Protected route to get the authenticated user's info
 router.get("/me", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");

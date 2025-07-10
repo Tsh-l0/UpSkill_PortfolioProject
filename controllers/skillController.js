@@ -1,6 +1,6 @@
 const Skill = require('../models/Skill')
 
-//  Create a new skill
+//Create a new skill
 const createSkill = async (req, res) => {
   try {
     const skill = await Skill.create({
@@ -13,7 +13,7 @@ const createSkill = async (req, res) => {
   }
 }
 
-//  Get all skills (optionally filtered by category)
+//Get all skills 
 const getSkills = async (req, res) => {
   try {
     const filter = {}
@@ -22,7 +22,7 @@ const getSkills = async (req, res) => {
     }
 
     const skills = await Skill.find(filter)
-      .populate('createdBy', 'name email') // Optional: show who added it
+      .populate('createdBy', 'name email') //show who added it
       .sort({ createdAt: -1 })
 
     res.status(200).json(skills)
@@ -31,7 +31,7 @@ const getSkills = async (req, res) => {
   }
 }
 
-//  Endorse a skill (add user to endorsements array)
+//  Endorse a skill
 const endorseSkill = async (req, res) => {
   try {
     const { id } = req.params
@@ -82,7 +82,7 @@ const deleteSkill = async (req, res) => {
 
 const updateSkill = async (req, res) => {
   try {
-    // For example: find by ID and update
+    //find by ID and update
     const updated = await Skill.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -108,5 +108,4 @@ module.exports = {
   deleteSkill,
   updateSkill
 };
-
 
