@@ -12,7 +12,7 @@ const Navbar = () => (
           <img
             src="/images/Upskill-logo.png"
             alt="UpSkill Logo"
-            style={{ height: "40px", width: "auto", objectFit: "contain" }}
+            className="logo-img"
           />
         </Link>
       </div>
