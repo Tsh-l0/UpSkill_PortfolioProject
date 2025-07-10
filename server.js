@@ -35,7 +35,7 @@ app.use("/api/users", userRoutes);
 
 // ✅ Root route to confirm backend is alive
 app.get("/", function (req, res) {
-  res.send("SkillUp backend is running 🔧");
+  res.send("UpSkill backend is running 🔧");
 });
 
 // 🔥 Error handling
