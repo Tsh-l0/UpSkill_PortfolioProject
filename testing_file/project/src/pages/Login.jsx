@@ -24,7 +24,7 @@ const Login = () => {
 			setErrors(newErrors);
 		} else {
 			// In a real app, you'd do auth here
-			navigate('/onboarding');
+			navigate('/profile');
 		}
 	};
 
