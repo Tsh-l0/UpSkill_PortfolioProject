@@ -27,7 +27,7 @@ var Signup = React.createClass({
       role: this.state.role
     };
 
-    axios.post('http://localhost:5000/api/auth/signup', payload)
+    axios.post("https://skillup-backend-26ea.onrender.com/api/signup", {
       .then(function (res) {
         console.log(res.data);
       })
