@@ -30,38 +30,25 @@ Welcome to the **UpSkill Portfolio Project** – a fully responsive, full-stack 
 ---
 
 ## 📂 Project Structure
+
+## 🗂️ Project Structure
+
+```txt
 UpSkill_PortfolioProject/
 ├── .gitignore
 ├── README.md
-├── backend/
-│   ├── controllers/
-│   ├── middleware/
-│   ├── models/
-│   ├── routes/
-│   ├── server.js
-│   └── ...
-├── client/
-│   ├── public/
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── ...
-│   ├── index.html
-│   └── vite.config.js
+├── app.js
+├── server.js
+├── package.json
+├── package-lock.json
+├── controllers/
+├── middlewares/
 ├── models/
-│   ├── user.js
-│   ├── project.js
-│   └── ...
+├── routes/
+├── node_modules/
 ├── testing_file/
-│   └── project/
-│       ├── node_modules/
-│       ├── package.json
-│       └── ...
-└── package.json
-
+└── project/
+```
 
 ## 👥 Contributors
 @Tsh-l0 — Frontend Development, Repo Owner
