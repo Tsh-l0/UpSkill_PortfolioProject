@@ -39,8 +39,8 @@ const Home = () => {
 			<h1>Building a Better Future Together</h1>
 			<p>Empowering individuals and teams to track and grow their skills.</p>
 			<div className="hero-buttons">
-				<Link to="/signup" className="btn primary">Explore Skills</Link>
-				<button className="btn secondary">Join a Team</button>
+				<Link to="/talent" className="btn primary">Explore Skills</Link>
+				<Link to="/login" className="btn secondary">Join a Team</Link>
 			</div>
 		</section>
 
