@@ -32,11 +32,11 @@ const skillSchema = new mongoose.Schema(
   { timestamps: true }
 )
 
-// 🔍 Index for optimized search/filter performance
+// Index for optimized search/filter performance
 skillSchema.index({ category: 1 })
 skillSchema.index({ name: "text" })
 
-// 📊 Virtual for endorsement count
+// Virtual for endorsement count
 skillSchema.virtual("endorsementCount").get(function () {
   return this.endorsements.length
 })
