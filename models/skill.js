@@ -42,4 +42,3 @@ skillSchema.virtual("endorsementCount").get(function () {
 })
 
 module.exports = mongoose.model("Skill", skillSchema)
-
