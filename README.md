@@ -30,6 +30,37 @@ Welcome to the **UpSkill Portfolio Project** – a fully responsive, full-stack 
 ---
 
 ## 📂 Project Structure
+UpSkill_PortfolioProject/
+├── .gitignore
+├── README.md
+├── backend/
+│   ├── controllers/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── server.js
+│   └── ...
+├── client/
+│   ├── public/
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── ...
+│   ├── index.html
+│   └── vite.config.js
+├── models/
+│   ├── user.js
+│   ├── project.js
+│   └── ...
+├── testing_file/
+│   └── project/
+│       ├── node_modules/
+│       ├── package.json
+│       └── ...
+└── package.json
 
 
 ## 👥 Contributors
