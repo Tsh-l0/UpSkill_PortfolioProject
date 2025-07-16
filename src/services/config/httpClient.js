@@ -1,4 +1,3 @@
-// services/config/httpClient.js - CORS FIXED
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 
@@ -6,7 +5,7 @@ import { toast } from 'react-hot-toast';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT) || 30000;
 
-console.log('API Base URL:', API_BASE_URL); // Debug log
+console.log('🌐 API Base URL:', API_BASE_URL);
 
 // Create main axios instance
 const httpClient = axios.create({
@@ -15,70 +14,62 @@ const httpClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
-    // Only include headers that backend CORS allows
-    'X-Client-Version': '1.0.0',
   },
-  withCredentials: true, // Important for CORS
+  withCredentials: false, // Set to false for CORS unless backend specifically needs it
 });
 
 // Token management utilities
 const getAuthToken = () => {
   try {
     const authData = localStorage.getItem('upskill-auth');
-    console.log('📦 Raw auth data from localStorage:', authData ? 'exists' : 'missing');
-    
     if (authData) {
       const parsed = JSON.parse(authData);
-      console.log('📦 Parsed auth data keys:', Object.keys(parsed));
-      
+      // Handle both Zustand persist format and direct format
       const token = parsed.state?.token || parsed.token;
-      console.log('🔑 Extracted token:', token ? 'found' : 'missing');
-      
       return token;
     }
   } catch (error) {
-    console.warn('❌ Error parsing auth data:', error);
+    console.warn('⚠️ Error parsing auth data:', error);
     localStorage.removeItem('upskill-auth');
   }
   return null;
 };
 
 const clearAuthData = () => {
-  localStorage.removeItem('upskill-auth');
-  localStorage.removeItem('upskill-user');
+  try {
+    localStorage.removeItem('upskill-auth');
+    localStorage.removeItem('upskill-user');
+    console.log('🧹 Auth data cleared');
+  } catch (error) {
+    console.warn('⚠️ Error clearing auth data:', error);
+  }
 };
 
-// Request interceptor - Add auth token and logging
+// Request interceptor - Add auth token
 httpClient.interceptors.request.use(
   config => {
-    // Add timestamp for request duration tracking
-    config.metadata = { startTime: new Date() };
-
     // Add auth token if available
     const token = getAuthToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔑 Token attached:', token.substring(0, 20) + '...'); // Debug log
-    } else {
-      console.log('❌ No token available'); // Debug log
     }
 
-    // Add session ID (allowed by backend CORS)
-    config.headers['X-Session-ID'] = `session_${Date.now()}`;
+    // Add request metadata for timing
+    config.metadata = { startTime: new Date() };
 
     // Log request in development
     if (import.meta.env.DEV) {
-      console.log(`🚀 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`, {
+      console.log(`🚀 ${config.method?.toUpperCase()} ${config.url}`, {
+        baseURL: config.baseURL,
         data: config.data,
         params: config.params,
-        headers: config.headers,
       });
     }
 
     return config;
   },
   error => {
-    console.error('Request interceptor error:', error);
+    console.error('❌ Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
@@ -94,12 +85,11 @@ httpClient.interceptors.response.use(
     // Log response in development
     if (import.meta.env.DEV) {
       console.log(
-        `✅ ${response.status} ${response.config.url} (${duration}ms)`,
-        response.data
+        `✅ ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url} (${duration}ms)`
       );
     }
 
-    // Return the response data directly (your backend returns { success, data, message })
+    // Return the response data directly (backend returns { success, data, message })
     return response.data;
   },
   error => {
@@ -110,17 +100,18 @@ httpClient.interceptors.response.use(
       ? new Date() - config.metadata.startTime 
       : 0;
 
-    // Log error in development
+    // Log error details
     if (import.meta.env.DEV) {
       console.error(
-        `❌ ${response?.status || 'NETWORK'} ${config?.url} (${duration}ms)`,
+        `❌ ${response?.status || 'NETWORK'} ${config?.method?.toUpperCase() || 'UNKNOWN'} ${config?.url || 'UNKNOWN'} (${duration}ms)`,
         {
           message: error.message,
-          response: response?.data,
-          config: {
+          responseData: response?.data,
+          requestConfig: {
             baseURL: config?.baseURL,
             url: config?.url,
             method: config?.method,
+            data: config?.data,
           }
         }
       );
@@ -129,44 +120,152 @@ httpClient.interceptors.response.use(
     // Handle different error types
     if (!response) {
       // Network error
-      console.error('Network Error:', error.message);
-      toast.error('Network error. Please check your connection and try again.');
-      return Promise.reject(new Error('Network error. Please check your connection.'));
+      console.error('🌐 Network Error:', error.message);
+      
+      // Only show toast for actual network issues, not when backend is handling CORS
+      if (error.code === 'NETWORK_ERROR' || error.message.includes('ERR_NETWORK')) {
+        toast.error('Unable to connect to server. Please check your connection.');
+      }
+      
+      return Promise.reject({
+        success: false,
+        error: 'Network connection failed',
+        message: 'Unable to connect to server'
+      });
     }
 
     // HTTP error response
-    const errorMessage = response?.data?.message || response?.data?.error || error.message;
-    
-    // Don't show toast for auth errors (handled by auth store)
-    if (response?.status !== 401 && response?.status !== 403) {
-      toast.error(errorMessage);
+    const status = response.status;
+    const errorData = response.data;
+    const errorMessage = errorData?.message || errorData?.error || error.message || 'Request failed';
+
+    // Handle specific status codes
+    if (status === 401) {
+      // Unauthorized - don't show toast (auth store handles this)
+      console.warn('🔐 Unauthorized request');
+      clearAuthData(); // Clear invalid token
+    } else if (status === 403) {
+      // Forbidden - don't show toast
+      console.warn('🚫 Forbidden request');
+    } else if (status === 404) {
+      // Not found - show specific message
+      console.warn('🔍 Resource not found');
+    } else if (status >= 500) {
+      // Server error
+      console.error('🔥 Server error:', status);
+      toast.error('Server error. Please try again later.');
+    } else if (status >= 400) {
+      // Client error - show error message from server
+      if (status !== 401 && status !== 403) {
+        toast.error(errorMessage);
+      }
     }
 
-    return Promise.reject(new Error(errorMessage));
+    // Return consistent error format
+    return Promise.reject({
+      success: false,
+      error: errorMessage,
+      status: status,
+      data: errorData
+    });
   }
 );
 
-// Helper functions for common HTTP methods
-export const get = (url, config = {}) => httpClient.get(url, config);
-export const post = (url, data = {}, config = {}) => httpClient.post(url, data, config);
-export const put = (url, data = {}, config = {}) => httpClient.put(url, data, config);
-export const del = (url, config = {}) => httpClient.delete(url, config);
-export const patch = (url, data = {}, config = {}) => httpClient.patch(url, data, config);
+// HTTP method helpers
+export const get = async (url, config = {}) => {
+  try {
+    return await httpClient.get(url, config);
+  } catch (error) {
+    // Ensure consistent error format
+    throw {
+      success: false,
+      error: error.error || error.message || 'GET request failed',
+      status: error.status || 0,
+      ...error
+    };
+  }
+};
+
+export const post = async (url, data = {}, config = {}) => {
+  try {
+    return await httpClient.post(url, data, config);
+  } catch (error) {
+    throw {
+      success: false,
+      error: error.error || error.message || 'POST request failed',
+      status: error.status || 0,
+      ...error
+    };
+  }
+};
+
+export const put = async (url, data = {}, config = {}) => {
+  try {
+    return await httpClient.put(url, data, config);
+  } catch (error) {
+    throw {
+      success: false,
+      error: error.error || error.message || 'PUT request failed',
+      status: error.status || 0,
+      ...error
+    };
+  }
+};
+
+export const del = async (url, config = {}) => {
+  try {
+    return await httpClient.delete(url, config);
+  } catch (error) {
+    throw {
+      success: false,
+      error: error.error || error.message || 'DELETE request failed',
+      status: error.status || 0,
+      ...error
+    };
+  }
+};
+
+export const patch = async (url, data = {}, config = {}) => {
+  try {
+    return await httpClient.patch(url, data, config);
+  } catch (error) {
+    throw {
+      success: false,
+      error: error.error || error.message || 'PATCH request failed',
+      status: error.status || 0,
+      ...error
+    };
+  }
+};
 
 // File upload helper
-export const upload = (url, file, onProgress = null) => {
-  const formData = new FormData();
-  formData.append('file', file);
+export const upload = async (url, file, onProgress = null) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
 
-  return httpClient.post(url, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-    onUploadProgress: onProgress ? (progressEvent) => {
-      const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-      onProgress(progress);
-    } : undefined,
-  });
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    };
+
+    if (onProgress) {
+      config.onUploadProgress = (progressEvent) => {
+        const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(progress);
+      };
+    }
+
+    return await httpClient.post(url, formData, config);
+  } catch (error) {
+    throw {
+      success: false,
+      error: error.error || error.message || 'File upload failed',
+      status: error.status || 0,
+      ...error
+    };
+  }
 };
 
 // Batch requests helper
@@ -179,18 +278,22 @@ export const batchRequests = async (requests) => {
     return responses.map(response => ({
       success: response.status === 'fulfilled',
       data: response.status === 'fulfilled' ? response.value : null,
-      error: response.status === 'rejected' ? response.reason : null,
+      error: response.status === 'rejected' ? response.reason?.error || response.reason?.message : null,
     }));
   } catch (error) {
     console.error('Batch request failed:', error);
-    throw error;
+    throw {
+      success: false,
+      error: 'Batch request failed',
+      details: error.message
+    };
   }
 };
 
 // Health check
 export const healthCheck = async () => {
   try {
-    const response = await httpClient.get('/health', { timeout: 5000 });
+    const response = await get('/health', { timeout: 5000 });
     return {
       healthy: true,
       ...response,
@@ -198,7 +301,7 @@ export const healthCheck = async () => {
   } catch (error) {
     return {
       healthy: false,
-      error: error.message,
+      error: error.error || error.message || 'Health check failed',
     };
   }
 };
@@ -209,5 +312,8 @@ export const getConfig = () => ({
   timeout: API_TIMEOUT,
 });
 
+// Utility functions
 export { clearAuthData, getAuthToken };
+
+// Default export
 export default httpClient;
