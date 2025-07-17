@@ -55,6 +55,7 @@ app.use(
         "http://localhost:3001",
         "http://localhost:5173",
         "http://localhost:4173",
+        "https://upskill-nu-ten.vercel.app",
         process.env.FRONTEND_URL,
         process.env.ADMIN_URL,
       ].filter(Boolean);
@@ -183,7 +184,7 @@ app.get("/api", (req, res) => {
     success: true,
     message: "UpSkill API Documentation",
     version: "1.0.0",
-    documentation: process.env.API_DOCS_URL || "https://docs.upskill.dev",
+    documentation: process.env.API_DOCS_URL || "https://upskill-api-yl2i.onrender.com/api",
     endpoints: {
       authentication: {
         base: "/api/auth",
@@ -312,6 +313,32 @@ app.use("*", (req, res) => {
     error: `Route ${req.originalUrl} not found`,
     availableEndpoints: "/api",
   });
+});
+
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+app.get("/health-render", async (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      status: "healthy",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      service: "UpSkill Backend"
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      status: "unhealthy",
+      error: error.message
+    });
+  }
 });
 
 // Graceful Shutdown

@@ -4,16 +4,26 @@ let redisClient;
 
 const connectRedis = async () => {
   try {
+    if (!process.env.REDIS_URL) {
+      console.log('⚠️ REDIS_URL not provided, skipping Redis connection');
+      return null;
+    }
+
+    console.log('🔌 Attempting Redis connection to:', process.env.REDIS_URL.replace(/:[^:]*@/, ':***@'));
+
+    // Create Redis client with Upstash URL
     redisClient = redis.createClient({
-      host: process.env.REDIS_HOST || "localhost",
-      port: process.env.REDIS_PORT || 6379,
-      password: process.env.REDIS_PASSWORD || null,
-      retryDelayOnFailover: 100,
-      enableReadyCheck: false,
-      maxRetriesPerRequest: null,
-      retryStrategy: (times) => {
-        const delay = Math.min(times * 50, 2000);
-        return delay;
+      url: process.env.REDIS_URL,
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 3) {
+            console.error('❌ Redis max reconnection attempts reached');
+            return false;
+          }
+          console.log(`🔄 Redis reconnection attempt ${retries}`);
+          return Math.min(retries * 100, 3000);
+        },
+        connectTimeout: 10000,
       },
     });
 
@@ -34,9 +44,16 @@ const connectRedis = async () => {
     });
 
     await redisClient.connect();
+
+    // Test the connection
+    await redisClient.ping();
+    console.log('Redis connection successful');
+
+    return redisClient;
   } catch (error) {
     console.error("Redis connection failed:", error);
     // Don't exit process, allow app to run without Redis
+    return null;
   }
 };
 
