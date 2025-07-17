@@ -352,61 +352,6 @@ const ContactSection = () => {
                 })}
               </div>
             </div>
-
-            {/* Features */}
-            <div className="rounded-2xl bg-white p-6 shadow-lg">
-              <h3 className="mb-6 text-xl font-semibold text-gray-900">
-                Why Choose UpSkill?
-              </h3>
-
-              <div className="space-y-4">
-                {features.map((feature, index) => {
-                  const Icon = feature.icon;
-                  return (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 10 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.4, delay: 0.1 * index }}
-                      className="flex items-start space-x-3"
-                    >
-                      <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-green-100">
-                        <Icon className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900">
-                          {feature.title}
-                        </h4>
-                        <p className="text-sm text-gray-500">
-                          {feature.description}
-                        </p>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Emergency Contact */}
-            <div className="rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 p-6">
-              <h4 className="mb-2 font-semibold text-gray-900">
-                Need immediate help?
-              </h4>
-              <p className="mb-4 text-sm text-gray-600">
-                For urgent technical issues or account problems, reach out to us
-                directly.
-              </p>
-              <Button
-                as="a"
-                href="mailto:support@upskill.co.za?subject=Urgent%20Support%20Request"
-                size="sm"
-                variant="primary"
-                className="w-full justify-center"
-              >
-                Contact Support
-              </Button>
-            </div>
           </motion.div>
         </div>
       </div>

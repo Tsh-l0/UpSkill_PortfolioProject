@@ -14,10 +14,10 @@ import { AnimatePresence } from 'framer-motion';
 import { queryClient } from './services/config/queryClient';
 
 // Layout & Components
-import Layout from './components/Layout';
+import Layout from './components/layout';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-//import { Loading } from './components/ui/Loading';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { PageLoading } from './components/ui/Loading';
 
 // Pages
 import Home from './pages/Home/Home';
@@ -28,9 +28,12 @@ import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 
+// Contact Page Component
+import ContactSection from './pages/Home/ContactSection';
+
 // Hooks
 import useAuth from './hooks/useAuth';
-import useAuthStore from './store/authStore';
+import { useAuthStore } from './store';
 
 // Auth initialization component
 const AuthInitializer = ({ children }) => {
@@ -40,6 +43,7 @@ const AuthInitializer = ({ children }) => {
   useEffect(() => {
     // Initialize auth on app startup
     if (!isInitialized) {
+      console.log('🔄 Initializing authentication...');
       initializeAuth();
     }
   }, [initializeAuth, isInitialized]);
@@ -48,9 +52,28 @@ const AuthInitializer = ({ children }) => {
   if (isLoading || !isInitialized) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        {/* <Loading size="lg" text="Initializing UpSkill..." /> */}
+        <PageLoading text="Initializing UpSkill..." />
       </div>
     );
+  }
+
+  return children;
+};
+
+// Protected route wrapper that checks authentication
+const AuthenticatedRoute = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <PageLoading text="Verifying authentication..." />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
   }
 
   return children;
@@ -64,7 +87,7 @@ const ProfileProtectedRoute = ({ children, requireComplete = false }) => {
     return <Navigate to="/onboarding" replace />;
   }
 
-  return <ProtectedRoute>{children}</ProtectedRoute>;
+  return <AuthenticatedRoute>{children}</AuthenticatedRoute>;
 };
 
 // Guest route component - redirects authenticated users
@@ -74,7 +97,7 @@ const GuestRoute = ({ children }) => {
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <LoadingSpinner size="lg" />
+        <PageLoading text="Loading..." />
       </div>
     );
   }
@@ -86,7 +109,43 @@ const GuestRoute = ({ children }) => {
   return children;
 };
 
+// Contact Page component
+const ContactPage = () => {
+  return (
+    <div className="min-h-screen bg-gray-50 pt-20">
+      <div className="container mx-auto px-4 py-12">
+        <div className="mb-12 text-center">
+          <h1 className="mb-4 text-4xl font-bold text-gray-900">Contact Support</h1>
+          <p className="mx-auto max-w-2xl text-lg text-gray-600">
+            Get in touch with our team for any questions, feedback, or technical support.
+          </p>
+        </div>
+        <ContactSection />
+      </div>
+    </div>
+  );
+};
+
 function App() {
+  // Set up global error handling
+  useEffect(() => {
+    const handleError = (event) => {
+      console.error('🚨 Global error caught:', event.error);
+    };
+
+    const handleUnhandledRejection = (event) => {
+      console.error('🚨 Unhandled promise rejection:', event.reason);
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
@@ -99,6 +158,9 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/blog" element={<Blog />} />
                   <Route path="/blog/:postId" element={<Blog />} />
+                  
+                  {/* Contact page - public access */}
+                  <Route path="/contact" element={<ContactPage />} />
 
                   {/* Talent page - public but enhanced when authenticated */}
                   <Route path="/talent" element={<MeetTalent />} />
@@ -110,21 +172,21 @@ function App() {
                   <Route
                     path="/profile"
                     element={
-                      <ProtectedRoute>
+                      <AuthenticatedRoute>
                         <Profile />
-                      </ProtectedRoute>
+                      </AuthenticatedRoute>
                     }
                   />
                   <Route
                     path="/profile/:userId"
                     element={
-                      <ProtectedRoute>
+                      <AuthenticatedRoute>
                         <Profile />
-                      </ProtectedRoute>
+                      </AuthenticatedRoute>
                     }
                   />
 
-                  {/* Dashboard requires complete profile */}
+                  {/* Dashboard requires authentication */}
                   <Route
                     path="/dashboard"
                     element={
@@ -153,17 +215,7 @@ function App() {
                   }
                 />
 
-                {/* Onboarding - requires auth but allows incomplete profile */}
-                <Route
-                  path="/onboarding"
-                  element={
-                    <ProtectedRoute>
-                      <Onboarding />
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* Forgot password - guest only */}
+                {/* Password reset - guest only */}
                 <Route
                   path="/forgot-password"
                   element={
@@ -173,106 +225,55 @@ function App() {
                   }
                 />
 
-                {/* Additional useful routes */}
+                {/* Onboarding - requires auth but allows incomplete profile */}
                 <Route
-                  path="/about"
+                  path="/onboarding"
                   element={
-                    <Layout>
-                      <div className="flex min-h-screen items-center justify-center">
-                        <div className="text-center">
-                          <h1 className="mb-4 text-4xl font-bold text-gray-900">
-                            About UpSkill
-                          </h1>
-                          <p className="text-lg text-gray-600">
-                            Coming soon...
-                          </p>
-                        </div>
-                      </div>
-                    </Layout>
+                    <AuthenticatedRoute>
+                      <Onboarding />
+                    </AuthenticatedRoute>
                   }
                 />
 
-                <Route
-                  path="/contact"
-                  element={
-                    <Layout>
-                      <div className="flex min-h-screen items-center justify-center">
-                        <div className="text-center">
-                          <h1 className="mb-4 text-4xl font-bold text-gray-900">
-                            Contact Us
-                          </h1>
-                          <p className="text-lg text-gray-600">
-                            Get in touch through our contact form on the
-                            homepage.
-                          </p>
-                        </div>
-                      </div>
-                    </Layout>
-                  }
-                />
+                {/* Support & Help routes */}
+                <Route path="/support" element={<Navigate to="/contact" replace />} />
+                <Route path="/help" element={<Navigate to="/contact" replace />} />
 
-                {/* 404 Route */}
+                {/* Catch-all 404 route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </AnimatePresence>
+
+            {/* Global Toast Notifications */}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                duration: 4000,
+                style: {
+                  background: '#363636',
+                  color: '#fff',
+                },
+                success: {
+                  duration: 3000,
+                  style: {
+                    background: '#10B981',
+                  },
+                },
+                error: {
+                  duration: 5000,
+                  style: {
+                    background: '#EF4444',
+                  },
+                },
+              }}
+            />
+
+            {/* React Query DevTools (development only) */}
+            {process.env.NODE_ENV === 'development' && (
+              <ReactQueryDevtools initialIsOpen={false} />
+            )}
           </AuthInitializer>
         </Router>
-
-        {/* React Query Devtools (only in development) */}
-        {import.meta.env.DEV && (
-          <ReactQueryDevtools
-            initialIsOpen={false}
-            position="bottom-right"
-            buttonPosition="bottom-right"
-          />
-        )}
-
-        {/* Global toast notifications */}
-        <Toaster
-          position="top-right"
-          gutter={8}
-          containerClassName="z-50"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#fff',
-              color: '#374151',
-              fontSize: '14px',
-              maxWidth: '500px',
-              boxShadow:
-                '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-            },
-            success: {
-              style: {
-                borderLeft: '4px solid #10b981',
-              },
-              iconTheme: {
-                primary: '#10b981',
-                secondary: '#fff',
-              },
-            },
-            error: {
-              style: {
-                borderLeft: '4px solid #ef4444',
-              },
-              iconTheme: {
-                primary: '#ef4444',
-                secondary: '#fff',
-              },
-            },
-            loading: {
-              style: {
-                borderLeft: '4px solid #6366f1',
-              },
-              iconTheme: {
-                primary: '#6366f1',
-                secondary: '#fff',
-              },
-            },
-          }}
-        />
       </QueryClientProvider>
     </ErrorBoundary>
   );

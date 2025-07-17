@@ -1,4 +1,3 @@
-// services/hooks/useAuth.js
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
@@ -8,7 +7,7 @@ const useAuth = (options = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Auth store
+  // Auth store - using all available methods
   const {
     isAuthenticated,
     user,
@@ -31,6 +30,7 @@ const useAuth = (options = {}) => {
     isLoggedIn,
     isProfileComplete,
     hasCompletedOnboarding,
+    getProfileCompletionScore,
   } = useAuthStore();
 
   const {
@@ -89,7 +89,7 @@ const useAuth = (options = {}) => {
           replace: true,
           state: {
             message: 'Account created successfully! Please log in.',
-            email: userData.email,
+            email: userData.email, // Pre-fill email on login
           },
         });
 
@@ -103,53 +103,37 @@ const useAuth = (options = {}) => {
     }
   };
 
-  // Enhanced logout with cleanup and navigation
-  const handleLogout = async (options = {}) => {
+  // Enhanced logout with navigation
+  const handleLogout = async () => {
     try {
       await logout();
-
-      // Navigate to home or specified route
-      const destination = options.redirectTo || '/';
-      navigate(destination, { replace: true });
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still navigate even if logout fails
-      const destination = options.redirectTo || '/';
-      navigate(destination, { replace: true });
-    }
-  };
-
-  // Profile update helper
-  const handleUpdateUser = async userData => {
-    try {
-      updateUser(userData);
-      toast.success('Profile updated successfully!');
+      
+      // Always redirect to home after logout
+      navigate('/', { replace: true });
+      
       return { success: true };
     } catch (error) {
-      toast.error('Failed to update profile');
-      return { success: false, error: error.message };
+      console.error('Logout error:', error);
+      // Still redirect even if logout API fails
+      navigate('/', { replace: true });
+      return { success: true }; // Logout is primarily client-side
     }
   };
 
-  // Initialize auth on mount (only once)
+  // Check authentication requirement
   useEffect(() => {
-    if (!isInitialized) {
-      initializeAuth();
-    }
-  }, [initializeAuth, isInitialized]);
-
-  // Handle authentication requirements
-  useEffect(() => {
-    // Don't redirect while loading or if not initialized
-    if (isLoading || !isInitialized) {
-      return;
-    }
+    if (!isInitialized) return; // Wait for auth to initialize
 
     if (requireAuth && !isAuthenticated) {
-      // Store intended destination for after login
+      // Store the attempted location
+      const from = location.pathname + location.search;
+      
       navigate('/login', {
-        state: { from: location },
         replace: true,
+        state: { 
+          from: { pathname: from },
+          message: 'Please log in to access this page.'
+        }
       });
     }
 
@@ -157,65 +141,40 @@ const useAuth = (options = {}) => {
       // Redirect authenticated users away from guest-only pages
       navigate(redirectTo, { replace: true });
     }
-  }, [
-    isAuthenticated,
-    isLoading,
-    isInitialized,
-    requireAuth,
-    requireGuest,
-    navigate,
-    location,
-    redirectTo,
-  ]);
+  }, [isAuthenticated, isInitialized, requireAuth, requireGuest, navigate, location, redirectTo]);
 
-  // Call onAuthChange when auth state changes
+  // Call onAuthChange callback when auth state changes
   useEffect(() => {
     if (onAuthChange && isInitialized) {
       onAuthChange({ isAuthenticated, user });
     }
   }, [isAuthenticated, user, isInitialized, onAuthChange]);
 
-  // Auto-clear errors after timeout
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(clearError, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, clearError]);
-
-  // Permission helpers
-  const hasRole = role => {
-    return user?.role === role;
+  // Profile completion helpers
+  const getProfileStrength = () => {
+    const score = getProfileCompletionScore();
+    if (score >= 90) return { level: 'excellent', color: 'green' };
+    if (score >= 70) return { level: 'good', color: 'blue' };
+    if (score >= 50) return { level: 'fair', color: 'yellow' };
+    return { level: 'poor', color: 'red' };
   };
 
-  const hasPermission = permission => {
-    const permissions = user?.permissions || [];
-    return permissions.includes(permission);
+  const getMissingProfileFields = () => {
+    if (!user) return [];
+    
+    const missing = [];
+    
+    if (!user.fullName) missing.push('Full Name');
+    if (!user.currentRole) missing.push('Current Role');
+    if (!user.location) missing.push('Location');
+    if (!user.bio) missing.push('Bio');
+    if (!user.profileImage) missing.push('Profile Photo');
+    if (!user.skills || user.skills.length === 0) missing.push('Skills');
+    
+    return missing;
   };
 
-  const canAccessRoute = (routePermissions = []) => {
-    if (!isAuthenticated) return false;
-    if (routePermissions.length === 0) return true;
-
-    return routePermissions.some(permission => hasPermission(permission));
-  };
-
-  // User status helpers
-  const getUserStatus = () => {
-    if (!user) return 'guest';
-    if (!hasCompletedOnboarding()) return 'onboarding';
-    if (!isProfileComplete()) return 'incomplete_profile';
-    return 'active';
-  };
-
-  const shouldRedirectToOnboarding = () => {
-    return isAuthenticated && !hasCompletedOnboarding();
-  };
-
-  const shouldCompleteProfile = () => {
-    return isAuthenticated && hasCompletedOnboarding() && !isProfileComplete();
-  };
-
+  // Return enhanced auth object
   return {
     // Auth state
     isAuthenticated,
@@ -224,33 +183,56 @@ const useAuth = (options = {}) => {
     isLoading,
     error,
     isInitialized,
-
-    // Auth actions
+    
+    // Auth actions (enhanced)
     login: handleLogin,
     signup: handleSignup,
     logout: handleLogout,
-    updateUser: handleUpdateUser,
+    
+    // Profile management
+    updateUser,
+    
+    // Token management
+    verifyToken,
+    initializeAuth,
+    
+    // Password management
     forgotPassword,
     resetPassword,
     changePassword,
-    clearError,
-
+    
     // Utility functions
+    clearError,
     getUser,
     getToken,
     isLoggedIn,
+    
+    // Profile completion
     isProfileComplete,
     hasCompletedOnboarding,
-
-    // Permission helpers
-    hasRole,
-    hasPermission,
-    canAccessRoute,
-
-    // Status helpers
-    getUserStatus,
-    shouldRedirectToOnboarding,
-    shouldCompleteProfile,
+    getProfileCompletionScore,
+    getProfileStrength,
+    getMissingProfileFields,
+    
+    // Enhanced getters
+    userRole: user?.role || 'user',
+    userName: user?.fullName || user?.name || 'User',
+    userEmail: user?.email || '',
+    userAvatar: user?.profileImage || user?.avatar || null,
+    
+    // Auth checks
+    canAccessRoute: (routeRequiresAuth = false) => {
+      if (!routeRequiresAuth) return true;
+      return isAuthenticated;
+    },
+    
+    shouldRedirectToOnboarding: () => {
+      return isAuthenticated && !hasCompletedOnboarding();
+    },
+    
+    shouldRedirectToProfile: () => {
+      return isAuthenticated && hasCompletedOnboarding() && !isProfileComplete();
+    }
   };
 };
 

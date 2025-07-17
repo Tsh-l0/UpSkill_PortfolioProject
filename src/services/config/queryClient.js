@@ -2,311 +2,205 @@ import { QueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 // Query client configuration
-const queryClientConfig = {
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Cache time - how long data stays in cache when unused
-      cacheTime: 1000 * 60 * 10, // 10 minutes
-
-      // Stale time - how long data is considered fresh
-      staleTime: 1000 * 60 * 2, // 2 minutes
-
+      // Stale time - how long data is considered fresh (5 minutes)
+      staleTime: 5 * 60 * 1000,
+      
+      // Cache time - how long inactive data stays in cache (10 minutes)
+      cacheTime: 10 * 60 * 1000,
+      
       // Retry configuration
       retry: (failureCount, error) => {
-        // Don't retry on 4xx errors (client errors)
-        if (error?.status >= 400 && error?.status < 500) {
+        // Don't retry on 4xx errors except 408 (timeout)
+        if (error?.status >= 400 && error?.status < 500 && error?.status !== 408) {
           return false;
         }
-
-        // Retry up to 3 times for network/server errors
+        
+        // Retry up to 3 times for other errors
         return failureCount < 3;
       },
-
+      
       // Retry delay with exponential backoff
-      retryDelay: attemptIndex => {
-        return Math.min(1000 * 2 ** attemptIndex, 30000);
-      },
-
-      // Background refetch settings
-      refetchOnWindowFocus: false, // Don't refetch when window gains focus
-      refetchOnReconnect: true, // Refetch when internet reconnects
-      refetchOnMount: true, // Refetch when component mounts
-
-      // Error handling
-      onError: error => {
-        // Log error for debugging
-        console.error('Query error:', error);
-
-        // Don't show toast for validation errors (422) or auth errors (401/403)
-        if (
-          error?.status === 422 ||
-          error?.status === 401 ||
-          error?.status === 403
-        ) {
-          return;
-        }
-
-        // Don't show toast for network errors that are already handled
-        if (error?.code === 'NETWORK_ERROR') {
-          return;
-        }
-
-        // Show generic error toast for other errors
-        if (error?.message && !error?.message.includes('toast already shown')) {
-          toast.error(error.message);
-        }
-      },
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      
+      // Refetch on window focus (disabled in development)
+      refetchOnWindowFocus: import.meta.env.PROD,
+      
+      // Refetch on reconnect
+      refetchOnReconnect: true,
+      
+      // Background refetch interval (disabled by default)
+      refetchInterval: false,
+      
+      // Don't refetch on mount if data exists and is not stale
+      refetchOnMount: true,
+      
+      // Network mode
+      networkMode: 'online',
     },
-
+    
     mutations: {
-      // Retry mutations only once
+      // Retry failed mutations once
       retry: 1,
-
-      // Retry delay for mutations
-      retryDelay: 2000,
-
-      // Error handling for mutations
-      onError: error => {
-        console.error('Mutation error:', error);
-
-        // Let individual mutations handle their own error display
-        // This is just for logging and global error tracking
+      
+      // Don't retry on 4xx errors
+      retryDelay: 1000,
+      
+      // Global error handler for mutations
+      onError: (error, variables, context) => {
+        console.error('🚨 Mutation error:', error);
+        
+        // Only show toast for non-auth errors (auth errors are handled by auth store)
+        if (error?.status !== 401 && error?.status !== 403) {
+          const message = error?.message || error?.data?.message || 'Something went wrong';
+          toast.error(message);
+        }
       },
-
-      // Success handling
-      onSuccess: data => {
-        // Global success handling if needed
-        console.log('Mutation success:', data);
+      
+      // Global success handler for mutations
+      onSuccess: (data, variables, context) => {
+        // Log successful mutations in development
+        if (import.meta.env.DEV) {
+          console.log('✅ Mutation success:', data);
+        }
       },
     },
   },
-};
+});
 
-// Create the query client
-export const queryClient = new QueryClient(queryClientConfig);
+// Global error handler for queries
+queryClient.setMutationDefaults(['query'], {
+  onError: (error) => {
+    console.error('🚨 Query error:', error);
+    
+    // Handle specific error types
+    if (error?.status === 401) {
+      // Authentication error - handled by auth store
+      return;
+    }
+    
+    if (error?.status === 403) {
+      // Permission error
+      toast.error('You do not have permission to access this resource');
+      return;
+    }
+    
+    if (error?.status === 404) {
+      // Not found - usually handled by component
+      return;
+    }
+    
+    if (error?.status >= 500) {
+      // Server error
+      toast.error('Server error. Please try again later.');
+      return;
+    }
+    
+    // Network error
+    if (!error?.status) {
+      toast.error('Network error. Please check your connection.');
+      return;
+    }
+    
+    // Generic error
+    const message = error?.message || 'An unexpected error occurred';
+    toast.error(message);
+  }
+});
 
-// Query key factories for consistent cache keys
-export const queryKeys = {
-  // Auth
-  auth: ['auth'],
-  authUser: () => [...queryKeys.auth, 'user'],
-  authSessions: () => [...queryKeys.auth, 'sessions'],
-
-  // Users
-  users: ['users'],
-  usersList: filters => [...queryKeys.users, 'list', filters],
-  userProfile: userId => [...queryKeys.users, 'profile', userId],
-  userSkills: userId => [...queryKeys.users, userId, 'skills'],
-  userExperience: userId => [...queryKeys.users, userId, 'experience'],
-  userProjects: userId => [...queryKeys.users, userId, 'projects'],
-  userConnections: userId => [...queryKeys.users, userId, 'connections'],
-  userEndorsements: userId => [...queryKeys.users, userId, 'endorsements'],
-  userAnalytics: (userId, timeframe) => [
-    ...queryKeys.users,
-    userId,
-    'analytics',
-    timeframe,
-  ],
-
-  // Skills
-  skills: ['skills'],
-  skillsList: filters => [...queryKeys.skills, 'list', filters],
-  skillDetail: skillId => [...queryKeys.skills, skillId],
-  skillsSearch: (query, filters) => [
-    ...queryKeys.skills,
-    'search',
-    query,
-    filters,
-  ],
-  skillsTrending: timeframe => [...queryKeys.skills, 'trending', timeframe],
-  skillsCategories: () => [...queryKeys.skills, 'categories'],
-  skillsAnalytics: () => [...queryKeys.skills, 'analytics'],
-
-  // Blog
-  blog: ['blog'],
-  blogPosts: filters => [...queryKeys.blog, 'posts', filters],
-  blogPost: postId => [...queryKeys.blog, 'post', postId],
-  blogSearch: (query, filters) => [...queryKeys.blog, 'search', query, filters],
-  blogCategories: () => [...queryKeys.blog, 'categories'],
-  blogTags: () => [...queryKeys.blog, 'tags'],
-  blogFeatured: () => [...queryKeys.blog, 'featured'],
-  blogTrending: timeframe => [...queryKeys.blog, 'trending', timeframe],
-
-  // Search
-  search: ['search'],
-  searchGlobal: query => [...queryKeys.search, 'global', query],
-  searchUsers: (query, filters) => [
-    ...queryKeys.search,
-    'users',
-    query,
-    filters,
-  ],
-  searchSkills: (query, filters) => [
-    ...queryKeys.search,
-    'skills',
-    query,
-    filters,
-  ],
-
-  // Notifications
-  notifications: ['notifications'],
-  notificationsList: () => [...queryKeys.notifications, 'list'],
-  notificationsUnread: () => [...queryKeys.notifications, 'unread'],
-
-  // Analytics
-  analytics: ['analytics'],
-  analyticsDashboard: timeframe => [
-    ...queryKeys.analytics,
-    'dashboard',
-    timeframe,
-  ],
-  analyticsSkills: timeframe => [...queryKeys.analytics, 'skills', timeframe],
-  analyticsUsers: timeframe => [...queryKeys.analytics, 'users', timeframe],
-};
-
-// Helper functions for cache management
-export const invalidateQueries = queryKey => {
+// Utility functions for query management
+export const invalidateQueries = (queryKey) => {
   return queryClient.invalidateQueries({ queryKey });
-};
-
-export const removeQueries = queryKey => {
-  return queryClient.removeQueries({ queryKey });
-};
-
-export const refetchQueries = queryKey => {
-  return queryClient.refetchQueries({ queryKey });
 };
 
 export const setQueryData = (queryKey, data) => {
   return queryClient.setQueryData(queryKey, data);
 };
 
-export const getQueryData = queryKey => {
+export const getQueryData = (queryKey) => {
   return queryClient.getQueryData(queryKey);
+};
+
+export const removeQueries = (queryKey) => {
+  return queryClient.removeQueries({ queryKey });
 };
 
 export const prefetchQuery = (queryKey, queryFn, options = {}) => {
   return queryClient.prefetchQuery({
     queryKey,
     queryFn,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    ...options,
+    ...options
   });
 };
 
-// Cache optimization helpers
-export const optimisticUpdate = async (queryKey, updater, rollbackData) => {
-  // Cancel any outgoing refetches
-  await queryClient.cancelQueries({ queryKey });
-
-  // Snapshot the previous value
-  const previousData = queryClient.getQueryData(queryKey);
-
-  // Optimistically update to the new value
-  queryClient.setQueryData(queryKey, updater);
-
-  // Return a context object with the snapshotted value
-  return { previousData, rollbackData };
+// Clear all cache (useful for logout)
+export const clearQueryCache = () => {
+  queryClient.clear();
 };
 
-export const rollbackOptimisticUpdate = (queryKey, context) => {
-  queryClient.setQueryData(queryKey, context.previousData);
+// Query key factories for consistent cache management
+export const queryKeys = {
+  // Auth queries
+  auth: ['auth'],
+  currentUser: () => [...queryKeys.auth, 'currentUser'],
+  
+  // User queries
+  users: ['users'],
+  user: (id) => [...queryKeys.users, 'detail', id],
+  userProfile: (id) => [...queryKeys.users, 'profile', id],
+  userAnalytics: (id, timeframe) => [...queryKeys.users, 'analytics', id, timeframe],
+  searchUsers: (params) => [...queryKeys.users, 'search', params],
+  trendingUsers: (params) => [...queryKeys.users, 'trending', params],
+  
+  // Skills queries
+  skills: ['skills'],
+  skillsAll: (params) => [...queryKeys.skills, 'all', params],
+  skillsTrending: (params) => [...queryKeys.skills, 'trending', params],
+  userSkills: (userId) => [...queryKeys.skills, 'user', userId],
+  
+  // Blog queries
+  blog: ['blog'],
+  blogPosts: (params) => [...queryKeys.blog, 'posts', params],
+  blogPost: (id) => [...queryKeys.blog, 'post', id],
+  blogCategories: () => [...queryKeys.blog, 'categories'],
+  
+  // Analytics queries
+  analytics: ['analytics'],
+  dashboardAnalytics: (params) => [...queryKeys.analytics, 'dashboard', params],
+  skillsAnalytics: () => [...queryKeys.analytics, 'skills'],
+  
+  // Connections queries
+  connections: ['connections'],
+  userConnections: (userId) => [...queryKeys.connections, 'user', userId],
+  pendingRequests: (type) => [...queryKeys.connections, 'pending', type],
+  
+  // Endorsements queries
+  endorsements: ['endorsements'],
+  userEndorsements: (userId, type) => [...queryKeys.endorsements, 'user', userId, type],
+  
+  // Projects queries
+  projects: ['projects'],
+  userProjects: (userId) => [...queryKeys.projects, 'user', userId],
+  
+  // Notifications queries
+  notifications: ['notifications'],
+  notificationsList: (params) => [...queryKeys.notifications, 'list', params],
+  notificationCounts: () => [...queryKeys.notifications, 'counts'],
 };
 
-// Prefetch strategies
-export const prefetchUserData = async userId => {
-  const prefetchPromises = [
-    prefetchQuery(queryKeys.userProfile(userId), () =>
-      import('../api/users').then(m => m.default.getUserById(userId))
-    ),
-    prefetchQuery(queryKeys.userSkills(userId), () =>
-      import('../api/users').then(m => m.default.getUserSkills(userId))
-    ),
-    prefetchQuery(queryKeys.userProjects(userId), () =>
-      import('../api/users').then(m => m.default.getUserProjects(userId))
-    ),
-  ];
-
-  return Promise.allSettled(prefetchPromises);
-};
-
-export const prefetchDashboardData = async () => {
-  const prefetchPromises = [
-    prefetchQuery(queryKeys.authUser(), () =>
-      import('../api/auth').then(m => m.default.verify())
-    ),
-    prefetchQuery(queryKeys.skillsTrending('30d'), () =>
-      import('../api/users').then(m => m.default.getTrendingSkills('30d'))
-    ),
-    prefetchQuery(queryKeys.blogFeatured(), () =>
-      import('../api/users').then(m => m.default.getFeaturedPosts())
-    ),
-  ];
-
-  return Promise.allSettled(prefetchPromises);
-};
-
-// Background sync for offline support
-export const syncOfflineData = async () => {
-  if (!navigator.onLine) return;
-
-  // Refetch critical data when coming back online
-  const criticalQueries = [
-    queryKeys.authUser(),
-    queryKeys.notificationsUnread(),
-  ];
-
-  return Promise.allSettled(
-    criticalQueries.map(queryKey => refetchQueries(queryKey))
-  );
-};
-
-// Listen for online/offline events
-if (typeof window !== 'undefined') {
-  window.addEventListener('online', syncOfflineData);
-  window.addEventListener('focus', () => {
-    // Refetch stale queries when window gains focus
-    queryClient.resumePausedMutations();
+// Development tools
+if (import.meta.env.DEV) {
+  // Log cache changes in development
+  queryClient.getQueryCache().subscribe((event) => {
+    if (event?.type === 'added') {
+      console.log('📦 Query cache added:', event.query.queryKey);
+    }
+    if (event?.type === 'removed') {
+      console.log('🗑️ Query cache removed:', event.query.queryKey);
+    }
   });
 }
-
-// Mutation helpers for common patterns
-export const createMutation = (mutationFn, options = {}) => {
-  return {
-    mutationFn,
-    ...options,
-    onError: (error, variables, context) => {
-      console.error('Mutation failed:', error);
-      options.onError?.(error, variables, context);
-    },
-    onSuccess: (data, variables, context) => {
-      console.log('Mutation succeeded:', data);
-      options.onSuccess?.(data, variables, context);
-    },
-  };
-};
-
-export const createOptimisticMutation = (
-  mutationFn,
-  queryKey,
-  updater,
-  options = {}
-) => {
-  return createMutation(mutationFn, {
-    ...options,
-    onMutate: async variables => {
-      const context = await optimisticUpdate(queryKey, updater, variables);
-      return { ...context, ...(options.onMutate?.(variables) || {}) };
-    },
-    onError: (error, variables, context) => {
-      rollbackOptimisticUpdate(queryKey, context);
-      options.onError?.(error, variables, context);
-    },
-    onSettled: (data, error, variables, context) => {
-      invalidateQueries(queryKey);
-      options.onSettled?.(data, error, variables, context);
-    },
-  });
-};
 
 export default queryClient;
