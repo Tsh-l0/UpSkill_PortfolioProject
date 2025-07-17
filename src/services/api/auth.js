@@ -1,26 +1,57 @@
-// services/api/auth.js
-import httpClient from '../config/httpClient';
+// File location: src/services/api/auth.js
+import { get, post } from '../config/httpClient.js';
 
 const authAPI = {
   // POST /api/auth/login
-  login: async credentials => {
+  login: async (credentials) => {
     try {
-      const response = await httpClient.post('/auth/login', {
+      console.log('🔐 Attempting login for:', credentials.email);
+      
+      const response = await post('/auth/login', {
         email: credentials.email,
         password: credentials.password,
       });
-      return response;
+
+      console.log('🔐 Login response:', response);
+      
+      // Handle different response formats from backend
+      if (response) {
+        // If response has success property, check it
+        if (response.hasOwnProperty('success') && !response.success) {
+          throw new Error(response.message || response.error || 'Login failed');
+        }
+        
+        // If we have token or user data, consider it successful
+        if (response.token || response.user || response.data) {
+          return {
+            success: true,
+            ...response
+          };
+        }
+        
+        // If response exists but no clear success indicator, assume success
+        return {
+          success: true,
+          ...response
+        };
+      }
+      
+      throw new Error('No response received from server');
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message || error.message || 'Login failed'
-      );
+      console.error('🔐 Login API error:', error);
+      
+      // Re-throw with consistent format
+      const errorMessage = error.error || error.message || 'Login failed';
+      throw new Error(errorMessage);
     }
   },
 
   // POST /api/auth/signup
-  signup: async userData => {
+  signup: async (userData) => {
     try {
-      const response = await httpClient.post('/auth/signup', {
+      console.log('📝 Attempting signup for:', userData.email);
+      
+      const response = await post('/auth/signup', {
         fullName: userData.fullName,
         email: userData.email,
         password: userData.password,
@@ -29,135 +60,207 @@ const authAPI = {
         experienceLevel: userData.experienceLevel,
         ...userData,
       });
-      return response;
+
+      console.log('📝 Signup response:', response);
+      
+      // Handle different response formats
+      if (response) {
+        if (response.hasOwnProperty('success') && !response.success) {
+          throw new Error(response.message || response.error || 'Signup failed');
+        }
+        
+        return {
+          success: true,
+          ...response
+        };
+      }
+      
+      throw new Error('No response received from server');
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message || error.message || 'Signup failed'
-      );
+      console.error('📝 Signup API error:', error);
+      
+      const errorMessage = error.error || error.message || 'Signup failed';
+      throw new Error(errorMessage);
     }
   },
 
   // POST /api/auth/logout
   logout: async () => {
     try {
-      const response = await httpClient.post('/auth/logout');
-      return response;
+      console.log('👋 Attempting logout');
+      
+      const response = await post('/auth/logout');
+      
+      console.log('👋 Logout response:', response);
+      
+      // Logout should generally succeed even if API call fails
+      return {
+        success: true,
+        message: 'Logged out successfully',
+        ...response
+      };
     } catch (error) {
-      // Continue with logout even if API call fails
-      console.warn('Logout API call failed:', error);
-      return { success: true };
+      console.warn('👋 Logout API error (continuing anyway):', error);
+      
+      // Return success anyway since logout is primarily client-side
+      return {
+        success: true,
+        message: 'Logged out successfully'
+      };
     }
   },
 
   // GET /api/auth/me
   getCurrentUser: async () => {
     try {
-      const response = await httpClient.get('/auth/me');
-      return response;
+      console.log('👤 Fetching current user');
+      
+      const response = await get('/auth/me');
+      
+      console.log('👤 Current user response:', response);
+      
+      if (response) {
+        if (response.hasOwnProperty('success') && !response.success) {
+          throw new Error(response.message || response.error || 'Failed to get user data');
+        }
+        
+        return {
+          success: true,
+          ...response
+        };
+      }
+      
+      throw new Error('No user data received');
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to get user data'
-      );
+      console.error('👤 Get current user error:', error);
+      
+      const errorMessage = error.error || error.message || 'Failed to get user data';
+      throw new Error(errorMessage);
     }
   },
 
   // POST /api/auth/refresh
-  refreshToken: async refreshToken => {
+  refreshToken: async (refreshToken) => {
     try {
-      const response = await httpClient.post('/auth/refresh', {
+      console.log('🔄 Attempting token refresh');
+      
+      const response = await post('/auth/refresh', {
         refreshToken,
       });
-      return response;
+      
+      console.log('🔄 Token refresh response:', response);
+      
+      if (response) {
+        if (response.hasOwnProperty('success') && !response.success) {
+          throw new Error(response.message || response.error || 'Token refresh failed');
+        }
+        
+        return {
+          success: true,
+          ...response
+        };
+      }
+      
+      throw new Error('No response received from server');
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message || error.message || 'Token refresh failed'
-      );
+      console.error('🔄 Token refresh error:', error);
+      
+      const errorMessage = error.error || error.message || 'Token refresh failed';
+      throw new Error(errorMessage);
     }
   },
 
   // POST /api/auth/forgot-password
-  forgotPassword: async email => {
+  forgotPassword: async (email) => {
     try {
-      const response = await httpClient.post('/auth/forgot-password', {
-        email,
-      });
-      return response;
+      console.log('🔑 Attempting password reset for:', email);
+      
+      const response = await post('/auth/forgot-password', { email });
+      
+      console.log('🔑 Forgot password response:', response);
+      
+      if (response) {
+        if (response.hasOwnProperty('success') && !response.success) {
+          throw new Error(response.message || response.error || 'Password reset request failed');
+        }
+        
+        return {
+          success: true,
+          ...response
+        };
+      }
+      
+      throw new Error('No response received from server');
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Password reset request failed'
-      );
+      console.error('🔑 Forgot password error:', error);
+      
+      const errorMessage = error.error || error.message || 'Password reset request failed';
+      throw new Error(errorMessage);
     }
   },
 
   // POST /api/auth/reset-password
   resetPassword: async (token, password, confirmPassword) => {
     try {
-      const response = await httpClient.post('/auth/reset-password', {
+      console.log('🔒 Attempting password reset');
+      
+      const response = await post('/auth/reset-password', {
         token,
         password,
         confirmPassword,
       });
-      return response;
+      
+      console.log('🔒 Reset password response:', response);
+      
+      if (response) {
+        if (response.hasOwnProperty('success') && !response.success) {
+          throw new Error(response.message || response.error || 'Password reset failed');
+        }
+        
+        return {
+          success: true,
+          ...response
+        };
+      }
+      
+      throw new Error('No response received from server');
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Password reset failed'
-      );
+      console.error('🔒 Reset password error:', error);
+      
+      const errorMessage = error.error || error.message || 'Password reset failed';
+      throw new Error(errorMessage);
     }
   },
 
   // PUT /api/auth/change-password
-  changePassword: async (currentPassword, newPassword, confirmPassword) => {
+  changePassword: async (currentPassword, newPassword) => {
     try {
-      const response = await httpClient.put('/auth/change-password', {
+      console.log('🔐 Attempting password change');
+      
+      const response = await post('/auth/change-password', {
         currentPassword,
         newPassword,
-        confirmPassword,
       });
-      return response;
+      
+      console.log('🔐 Change password response:', response);
+      
+      if (response) {
+        if (response.hasOwnProperty('success') && !response.success) {
+          throw new Error(response.message || response.error || 'Password change failed');
+        }
+        
+        return {
+          success: true,
+          ...response
+        };
+      }
+      
+      throw new Error('No response received from server');
     } catch (error) {
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Password change failed'
-      );
-    }
-  },
-
-  // GET /api/auth/verify-email
-  verifyEmail: async token => {
-    try {
-      const response = await httpClient.get(
-        `/auth/verify-email?token=${token}`
-      );
-      return response;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Email verification failed'
-      );
-    }
-  },
-
-  // POST /api/auth/resend-verification
-  resendVerification: async email => {
-    try {
-      const response = await httpClient.post('/auth/resend-verification', {
-        email,
-      });
-      return response;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message ||
-          error.message ||
-          'Failed to resend verification email'
-      );
+      console.error('🔐 Change password error:', error);
+      
+      const errorMessage = error.error || error.message || 'Password change failed';
+      throw new Error(errorMessage);
     }
   },
 };

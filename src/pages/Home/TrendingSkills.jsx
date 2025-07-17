@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -85,10 +85,8 @@ const TrendingSkills = () => {
   // Filter and display skills safely
   const displayedSkills = skills.slice(0, displayCount);
 
-  // Generate fallback trending skills data
+  // Generate fallback trending skills data using SA context
   function generateFallbackSkills(category = 'all') {
-    const trendingData = saUtils.getTrendingSkills();
-
     const fullSkillsData = [
       // Frontend Skills
       {
@@ -145,9 +143,9 @@ const TrendingSkills = () => {
       {
         name: 'Python',
         category: 'backend',
-        growth: 28,
-        userCount: 5200,
-        jobCount: 156,
+        growth: 20,
+        userCount: 4200,
+        jobCount: 134,
         difficulty: 'beginner',
         description:
           'High-level programming language for web development and data science',
@@ -156,41 +154,42 @@ const TrendingSkills = () => {
         name: 'Java',
         category: 'backend',
         growth: 8,
-        userCount: 4100,
-        jobCount: 134,
+        userCount: 3600,
+        jobCount: 102,
         difficulty: 'intermediate',
         description:
-          'Object-oriented programming language for enterprise applications',
+          'Object-oriented programming language widely used in enterprise',
       },
       {
         name: 'C#',
         category: 'backend',
         growth: 15,
-        userCount: 3100,
-        jobCount: 95,
+        userCount: 2900,
+        jobCount: 78,
         difficulty: 'intermediate',
         description:
-          'Modern, object-oriented programming language developed by Microsoft',
+          'Microsoft programming language for building various applications',
       },
 
       // Mobile Skills
       {
         name: 'React Native',
         category: 'mobile',
-        growth: 35,
-        userCount: 1800,
-        jobCount: 45,
+        growth: 28,
+        userCount: 2400,
+        jobCount: 56,
         difficulty: 'intermediate',
         description: 'Framework for building native mobile apps using React',
       },
       {
         name: 'Flutter',
         category: 'mobile',
-        growth: 42,
-        userCount: 1200,
-        jobCount: 32,
+        growth: 35,
+        userCount: 1800,
+        jobCount: 43,
         difficulty: 'intermediate',
-        description: 'UI toolkit for building natively compiled applications',
+        description:
+          "Google's UI toolkit for building natively compiled applications",
       },
 
       // DevOps Skills
@@ -198,27 +197,27 @@ const TrendingSkills = () => {
         name: 'AWS',
         category: 'devops',
         growth: 32,
-        userCount: 2900,
-        jobCount: 87,
+        userCount: 3100,
+        jobCount: 89,
         difficulty: 'advanced',
         description: 'Amazon Web Services cloud computing platform',
       },
       {
         name: 'Docker',
         category: 'devops',
-        growth: 28,
-        userCount: 2600,
+        growth: 26,
+        userCount: 2700,
         jobCount: 76,
         difficulty: 'intermediate',
         description:
-          'Platform for developing, shipping, and running applications in containers',
+          'Platform for developing, shipping, and running applications',
       },
       {
         name: 'Kubernetes',
         category: 'devops',
         growth: 38,
-        userCount: 1500,
-        jobCount: 43,
+        userCount: 1900,
+        jobCount: 65,
         difficulty: 'advanced',
         description:
           'Container orchestration platform for automating deployment',
@@ -228,27 +227,27 @@ const TrendingSkills = () => {
       {
         name: 'PostgreSQL',
         category: 'database',
-        growth: 20,
-        userCount: 2400,
-        jobCount: 65,
+        growth: 16,
+        userCount: 2300,
+        jobCount: 67,
         difficulty: 'intermediate',
-        description: 'Advanced open source relational database',
+        description: 'Open source relational database management system',
       },
       {
         name: 'MongoDB',
         category: 'database',
-        growth: 18,
+        growth: 19,
         userCount: 2100,
         jobCount: 58,
         difficulty: 'beginner',
-        description: 'Document-oriented NoSQL database',
+        description: 'NoSQL document database program',
       },
 
       // Design Skills
       {
         name: 'Figma',
         category: 'design',
-        growth: 25,
+        growth: 24,
         userCount: 1600,
         jobCount: 34,
         difficulty: 'beginner',
@@ -257,11 +256,11 @@ const TrendingSkills = () => {
       {
         name: 'UI/UX Design',
         category: 'design',
-        growth: 22,
+        growth: 21,
         userCount: 1900,
         jobCount: 42,
         difficulty: 'intermediate',
-        description: 'User interface and user experience design principles',
+        description: 'User interface and experience design principles',
       },
     ];
 
@@ -271,7 +270,7 @@ const TrendingSkills = () => {
         ? fullSkillsData
         : fullSkillsData.filter(skill => skill.category === category);
 
-    // Add required fields
+    // Add required fields and SA salary context
     return filteredSkills.map((skill, index) => ({
       _id: `skill-${index}`,
       id: `skill-${index}`,
@@ -284,6 +283,7 @@ const TrendingSkills = () => {
   }
 
   function getAverageSalary(skillName) {
+    // SA tech salary ranges in ZAR annually
     const salaryMap = {
       React: 650000,
       TypeScript: 720000,
@@ -321,13 +321,32 @@ const TrendingSkills = () => {
 
   const formatSalary = salary => {
     if (!salary) return 'N/A';
-    return saUtils.formatCurrency(salary, { maximumFractionDigits: 0 });
+    return saUtils.formatZAR(salary, { maximumFractionDigits: 0 });
   };
 
   const getCategoryIcon = category => {
     const categoryData = CATEGORIES.find(cat => cat.value === category);
     return categoryData ? categoryData.icon : Code;
   };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <section className="bg-white py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
+              Trending Skills
+            </h2>
+            <p className="mx-auto max-w-2xl text-gray-600">
+              Discover the most in-demand skills in South Africa's tech market
+            </p>
+          </div>
+          <SectionLoading />
+        </div>
+      </section>
+    );
+  }
 
   // Error state
   if (error && !isLoading && skills.length === 0) {
@@ -353,21 +372,10 @@ const TrendingSkills = () => {
     );
   }
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <SectionLoading rows={8} />
-        </div>
-      </section>
-    );
-  }
-
   return (
     <section className="bg-white py-16">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Section Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -376,12 +384,11 @@ const TrendingSkills = () => {
           className="mb-12 text-center"
         >
           <h2 className="mb-4 text-3xl font-bold text-gray-900 md:text-4xl">
-            Trending Skills in South Africa
+            Trending Skills
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-gray-600">
-            Stay ahead of the curve with the most in-demand skills in the South
-            African developer community. Track growth trends and discover
-            opportunities.
+          <p className="mx-auto max-w-2xl text-gray-600">
+            Discover the most in-demand skills in South Africa's tech market and
+            boost your career with high-growth technologies.
           </p>
         </motion.div>
 
@@ -390,234 +397,157 @@ const TrendingSkills = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-12 flex flex-wrap justify-center gap-3"
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="mb-8"
         >
-          {CATEGORIES.map(category => {
-            const Icon = category.icon;
+          <div className="flex flex-wrap justify-center gap-2">
+            {CATEGORIES.map(category => {
+              const Icon = category.icon;
+              return (
+                <button
+                  key={category.value}
+                  onClick={() => setSelectedCategory(category.value)}
+                  className={`flex items-center rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                    selectedCategory === category.value
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  <Icon className="mr-2 h-4 w-4" />
+                  {category.label}
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* Skills Grid */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+        >
+          {displayedSkills.map((skill, index) => {
+            const Icon = getCategoryIcon(skill.category);
             return (
-              <button
-                key={category.value}
-                onClick={() => {
-                  setSelectedCategory(category.value);
-                  setDisplayCount(6); // Reset display count when changing category
-                }}
-                className={`flex items-center space-x-2 rounded-full px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                  selectedCategory === category.value
-                    ? 'scale-105 bg-indigo-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:scale-105 hover:bg-gray-200'
-                }`}
+              <motion.div
+                key={skill.id || index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-gray-50 p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
               >
-                <Icon className="h-4 w-4" />
-                <span>{category.label}</span>
-              </button>
+                {/* Trending Badge */}
+                {skill.trending && (
+                  <div className="absolute top-4 right-4">
+                    <div className="flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
+                      <TrendingUp className="mr-1 h-3 w-3" />
+                      Hot
+                    </div>
+                  </div>
+                )}
+
+                {/* Skill Header */}
+                <div className="mb-4 flex items-start space-x-3">
+                  <div className="rounded-lg bg-blue-100 p-2">
+                    <Icon className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate text-lg font-semibold text-gray-900">
+                      {skill.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 capitalize">
+                      {skill.category}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p className="mb-4 line-clamp-2 text-sm text-gray-600">
+                  {skill.description}
+                </p>
+
+                {/* Stats Grid */}
+                <div className="mb-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {skill.growth}%
+                    </div>
+                    <div className="text-xs text-gray-500">Growth</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {formatSalary(skill.averageSalary)}
+                    </div>
+                    <div className="text-xs text-gray-500">Avg Salary</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {skill.userCount?.toLocaleString() || 'N/A'}
+                    </div>
+                    <div className="text-xs text-gray-500">Professionals</div>
+                  </div>
+                  <div>
+                    <div className="text-lg font-semibold text-gray-900">
+                      {skill.jobCount || 'N/A'}
+                    </div>
+                    <div className="text-xs text-gray-500">Open Jobs</div>
+                  </div>
+                </div>
+
+                {/* Difficulty & Demand */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${getDifficultyColor(skill.difficulty)}`}
+                  >
+                    {skill.difficulty}
+                  </span>
+                  <span className="text-xs font-medium text-gray-600">
+                    {skill.demandLevel} Demand
+                  </span>
+                </div>
+              </motion.div>
             );
           })}
         </motion.div>
 
-        {/* No data state */}
-        {skills.length === 0 && !isLoading && (
-          <div className="py-12 text-center">
-            <h3 className="mb-2 text-lg font-semibold text-gray-900">
-              No trending skills found
-            </h3>
-            <p className="mb-6 text-gray-600">
-              {selectedCategory === 'all'
-                ? 'No skills data available at the moment.'
-                : `No trending skills found in the ${selectedCategory} category.`}
-            </p>
-            <Button onClick={() => setSelectedCategory('all')} variant="ghost">
-              View All Categories
-            </Button>
-          </div>
-        )}
-
-        {/* Skills Grid */}
-        {skills.length > 0 && (
-          <>
-            <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {displayedSkills.map((skill, index) => {
-                const Icon = getCategoryIcon(skill.category);
-                const growth = skill.growthRate || skill.growth || 0;
-                const isPositive = growth >= 0;
-
-                return (
-                  <motion.div
-                    key={skill._id || skill.id || `skill-${index}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-6 transition-all duration-300 hover:border-indigo-200 hover:shadow-lg"
-                  >
-                    {/* Header */}
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-100 transition-colors group-hover:bg-indigo-200">
-                          <Icon className="h-6 w-6 text-indigo-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 transition-colors group-hover:text-indigo-600">
-                            {skill.name}
-                          </h3>
-                          <p className="text-sm text-gray-500 capitalize">
-                            {skill.category}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Trend Indicator */}
-                      <div
-                        className={`flex items-center space-x-1 rounded-full px-2 py-1 text-xs font-medium ${
-                          isPositive
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {isPositive ? (
-                          <TrendingUp className="h-3 w-3" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3" />
-                        )}
-                        <span>{Math.abs(growth)}%</span>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    {skill.description && (
-                      <p className="mb-4 line-clamp-2 text-sm text-gray-600">
-                        {skill.description}
-                      </p>
-                    )}
-
-                    {/* Stats */}
-                    <div className="mb-4 grid grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-lg font-semibold text-gray-900">
-                          {(
-                            skill.userCount ||
-                            skill.developers ||
-                            0
-                          ).toLocaleString()}
-                        </div>
-                        <div className="text-xs text-gray-500">Developers</div>
-                      </div>
-                      <div>
-                        <div className="text-lg font-semibold text-gray-900">
-                          {skill.jobCount || skill.jobs || 0}
-                        </div>
-                        <div className="text-xs text-gray-500">Open Jobs</div>
-                      </div>
-                    </div>
-
-                    {/* Tags */}
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex space-x-2">
-                        {skill.difficulty && (
-                          <span
-                            className={`rounded-full px-2 py-1 text-xs font-medium ${getDifficultyColor(
-                              skill.difficulty
-                            )}`}
-                          >
-                            {skill.difficulty}
-                          </span>
-                        )}
-                        {skill.trending && (
-                          <span className="rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800">
-                            🔥 Hot
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Salary */}
-                    {skill.averageSalary && (
-                      <div className="text-sm text-gray-600">
-                        Avg Salary: {formatSalary(skill.averageSalary)}
-                      </div>
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Show More Button */}
-            {skills.length > displayCount && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                className="mb-8 text-center"
-              >
-                <Button
-                  onClick={() => setDisplayCount(prev => prev + 6)}
-                  variant="ghost"
-                  size="lg"
-                >
-                  Show More Skills
-                </Button>
-              </motion.div>
-            )}
-
-            {/* View All Skills CTA */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-center"
+        {/* Load More & CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="mt-12 text-center"
+        >
+          {skills.length > displayCount && (
+            <Button
+              onClick={() => setDisplayCount(prev => prev + 6)}
+              variant="outline"
+              size="lg"
+              className="mb-6"
             >
-              <Button as={Link} to="/talent" size="lg" className="px-8">
-                Explore Developer Profiles
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </motion.div>
-          </>
-        )}
+              Load More Skills
+            </Button>
+          )}
 
-        {/* Stats Summary */}
-        {skills.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-16 grid grid-cols-1 gap-8 rounded-2xl bg-gradient-to-r from-indigo-50 to-purple-50 p-8 md:grid-cols-4"
-          >
-            {[
-              {
-                number: `${skills.length}+`,
-                label: 'Skills Tracked',
-                description: 'Comprehensive skill database',
-              },
-              {
-                number: '10K+',
-                label: 'Active Developers',
-                description: 'Growing community',
-              },
-              {
-                number: '2.3K',
-                label: 'Job Openings',
-                description: 'Current opportunities',
-              },
-              {
-                number: '25%',
-                label: 'Avg Growth',
-                description: 'Year-over-year skill demand',
-              },
-            ].map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="mb-1 text-2xl font-bold text-indigo-600 md:text-3xl">
-                  {stat.number}
-                </div>
-                <div className="mb-1 font-medium text-gray-900">
-                  {stat.label}
-                </div>
-                <div className="text-sm text-gray-600">{stat.description}</div>
-              </div>
-            ))}
-          </motion.div>
-        )}
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Ready to build your skills and advance your career?
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Button as={Link} to="/talent" variant="primary" size="lg">
+                Find Skilled Developers
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button as={Link} to="/blog" variant="outline" size="lg">
+                Learning Resources
+              </Button>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

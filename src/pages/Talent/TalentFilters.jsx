@@ -20,6 +20,53 @@ import useDebounce from '../../hooks/useDebounce';
 // SA Utils
 import saUtils from '../../services/utils/southAfrica';
 
+// SA Tech Skills - Define locally since it doesn't exist in saUtils
+const SA_TECH_SKILLS = [
+  'JavaScript',
+  'TypeScript',
+  'React',
+  'Angular',
+  'Vue.js',
+  'Node.js',
+  'Express.js',
+  'Python',
+  'Django',
+  'Flask',
+  'Java',
+  'Spring Boot',
+  'C#',
+  '.NET',
+  'PHP',
+  'Laravel',
+  'HTML/CSS',
+  'Tailwind CSS',
+  'Bootstrap',
+  'SCSS',
+  'SQL',
+  'PostgreSQL',
+  'MySQL',
+  'MongoDB',
+  'Redis',
+  'AWS',
+  'Azure',
+  'Docker',
+  'Kubernetes',
+  'Git',
+  'GraphQL',
+  'REST APIs',
+  'Microservices',
+  'DevOps',
+  'CI/CD',
+  'React Native',
+  'Flutter',
+  'iOS',
+  'Android',
+  'Figma',
+  'UI/UX Design',
+  'Photoshop',
+  'Sketch',
+];
+
 // SA-specific filter options
 const EXPERIENCE_LEVELS = [
   { value: 'entry', label: 'Entry Level (0-2 years)' },
@@ -86,10 +133,12 @@ const TalentFilters = ({
   );
 
   // Get SA skills - combine backend skills with SA tech skills
+  // Handle case where saUtils.SA_TECH_SKILLS might not exist
+  const saUtilsSkills = saUtils.SA_TECH_SKILLS || SA_TECH_SKILLS;
   const saSkills = [
     ...new Set([
-      ...saUtils.SA_TECH_SKILLS,
-      ...availableSkills.map(skill => skill.name),
+      ...saUtilsSkills,
+      ...availableSkills.map(skill => skill.name || skill),
     ]),
   ];
 
@@ -232,82 +281,90 @@ const TalentFilters = ({
           <AnimatePresence>
             {openSections.skills && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-3"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {/* Selected Skills */}
-                {filters.skills && filters.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {filters.skills.map(skill => (
-                      <span
+                <div className="space-y-3">
+                  {/* Skill Search */}
+                  <div className="relative">
+                    <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    <input
+                      ref={skillInputRef}
+                      type="text"
+                      placeholder="Search skills..."
+                      value={skillSearch}
+                      onChange={e => setSkillSearch(e.target.value)}
+                      onKeyPress={handleSkillKeyPress}
+                      className="w-full rounded-lg border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+
+                  {/* Selected Skills */}
+                  {filters.skills && filters.skills.length > 0 && (
+                    <div>
+                      <p className="mb-2 text-xs font-medium text-gray-700">
+                        Selected Skills:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {filters.skills.map(skill => (
+                          <span
+                            key={skill}
+                            className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-xs font-medium text-indigo-800"
+                          >
+                            {skill}
+                            <button
+                              onClick={() => removeSkill(skill)}
+                              className="ml-2 inline-flex h-4 w-4 items-center justify-center rounded-full text-indigo-600 hover:bg-indigo-200 hover:text-indigo-800"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Skills Grid */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {displayedSkills.map(skill => (
+                      <label
                         key={skill}
-                        className="inline-flex items-center rounded-full bg-indigo-100 px-3 py-1 text-sm font-medium text-indigo-800"
+                        className="flex cursor-pointer items-center space-x-2 rounded-lg border p-2 hover:bg-gray-50"
                       >
-                        {skill}
-                        <button
-                          onClick={() => removeSkill(skill)}
-                          className="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-indigo-200"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
+                        <input
+                          type="checkbox"
+                          checked={filters.skills?.includes(skill) || false}
+                          onChange={() => toggleSkill(skill)}
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <span className="text-sm text-gray-700">{skill}</span>
+                      </label>
                     ))}
                   </div>
-                )}
 
-                {/* Skill Search */}
-                <div className="relative">
-                  <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    ref={skillInputRef}
-                    type="text"
-                    placeholder="Search or add skills..."
-                    value={skillSearch}
-                    onChange={e => setSkillSearch(e.target.value)}
-                    onKeyPress={handleSkillKeyPress}
-                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-
-                {/* Skill Options */}
-                <div className="grid grid-cols-2 gap-2">
-                  {displayedSkills.map(skill => (
-                    <button
-                      key={skill}
-                      onClick={() => toggleSkill(skill)}
-                      className={`flex items-center justify-between rounded-md border px-3 py-2 text-sm transition-colors ${
-                        filters.skills?.includes(skill)
-                          ? 'border-indigo-200 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                      }`}
+                  {/* Show More/Less Skills */}
+                  {filteredSkills.length > 8 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowAllSkills(!showAllSkills)}
+                      className="w-full"
                     >
-                      <span>{skill}</span>
-                      {filters.skills?.includes(skill) && (
-                        <Check className="h-3 w-3 text-indigo-600" />
-                      )}
-                    </button>
-                  ))}
+                      {showAllSkills
+                        ? 'Show Less'
+                        : `Show All (${filteredSkills.length})`}
+                    </Button>
+                  )}
                 </div>
-
-                {/* Show More Skills */}
-                {filteredSkills.length > 8 && (
-                  <button
-                    onClick={() => setShowAllSkills(!showAllSkills)}
-                    className="text-sm text-indigo-600 hover:text-indigo-700"
-                  >
-                    {showAllSkills
-                      ? 'Show Less'
-                      : `Show ${filteredSkills.length - 8} More`}
-                  </button>
-                )}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Experience Level */}
+        {/* Experience Level Filter */}
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('experience')}
@@ -324,48 +381,46 @@ const TalentFilters = ({
           <AnimatePresence>
             {openSections.experience && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {EXPERIENCE_LEVELS.map(level => (
-                  <label key={level.value} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="experience"
-                      value={level.value}
-                      checked={filters.experience === level.value}
-                      onChange={e =>
-                        updateFilters('experience', e.target.value)
-                      }
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">
-                      {level.label}
-                    </span>
-                  </label>
-                ))}
-                {filters.experience && (
-                  <button
-                    onClick={() => updateFilters('experience', '')}
-                    className="text-sm text-indigo-600 hover:text-indigo-700"
-                  >
-                    Clear selection
-                  </button>
-                )}
+                <div className="space-y-2">
+                  {EXPERIENCE_LEVELS.map(level => (
+                    <label
+                      key={level.value}
+                      className="flex cursor-pointer items-center space-x-2"
+                    >
+                      <input
+                        type="radio"
+                        name="experience"
+                        value={level.value}
+                        checked={filters.experience === level.value}
+                        onChange={e =>
+                          updateFilters('experience', e.target.value)
+                        }
+                        className="border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {level.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Location - SA Specific */}
+        {/* Location Filter */}
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('location')}
             className="flex w-full items-center justify-between text-left"
           >
-            <h3 className="font-medium text-gray-900">SA Location</h3>
+            <h3 className="font-medium text-gray-900">Location</h3>
             <ChevronDown
               className={`h-4 w-4 text-gray-500 transition-transform ${
                 openSections.location ? 'rotate-180' : ''
@@ -376,57 +431,33 @@ const TalentFilters = ({
           <AnimatePresence>
             {openSections.location && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-3"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                <div className="relative">
-                  <MapPin className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Enter SA city or province..."
-                    value={filters.location || ''}
-                    onChange={e => updateFilters('location', e.target.value)}
-                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">Major SA cities:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {saUtils.SA_MAJOR_CITIES.map(city => (
-                      <button
-                        key={city.name}
-                        onClick={() => updateFilters('location', city.fullName)}
-                        className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200"
-                      >
-                        {city.name}, {city.province}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">SA Provinces:</p>
-                  <div className="flex flex-wrap gap-1">
-                    {saUtils.SA_PROVINCES.map(province => (
-                      <button
-                        key={province}
-                        onClick={() => updateFilters('location', province)}
-                        className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200"
-                      >
-                        {province}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <select
+                  value={filters.location}
+                  onChange={e => updateFilters('location', e.target.value)}
+                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                >
+                  <option value="">All locations</option>
+                  {(saUtils.SA_MAJOR_CITIES || []).map(city => (
+                    <option
+                      key={city.name || city}
+                      value={city.fullName || city}
+                    >
+                      {city.fullName || city}
+                    </option>
+                  ))}
+                </select>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Work Type */}
+        {/* Work Type Filter */}
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('workType')}
@@ -443,40 +474,40 @@ const TalentFilters = ({
           <AnimatePresence>
             {openSections.workType && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {WORK_TYPES.map(type => (
-                  <label key={type.value} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="workType"
-                      value={type.value}
-                      checked={filters.workType === type.value}
-                      onChange={e => updateFilters('workType', e.target.value)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="ml-2 text-sm text-gray-700">
-                      {type.icon} {type.label}
-                    </span>
-                  </label>
-                ))}
-                {filters.workType && (
-                  <button
-                    onClick={() => updateFilters('workType', '')}
-                    className="text-sm text-indigo-600 hover:text-indigo-700"
-                  >
-                    Clear selection
-                  </button>
-                )}
+                <div className="space-y-2">
+                  {WORK_TYPES.map(type => (
+                    <label
+                      key={type.value}
+                      className="flex cursor-pointer items-center space-x-2"
+                    >
+                      <input
+                        type="radio"
+                        name="workType"
+                        value={type.value}
+                        checked={filters.workType === type.value}
+                        onChange={e =>
+                          updateFilters('workType', e.target.value)
+                        }
+                        className="border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm">
+                        {type.icon} {type.label}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Availability */}
+        {/* Availability Filter */}
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('availability')}
@@ -493,55 +524,49 @@ const TalentFilters = ({
           <AnimatePresence>
             {openSections.availability && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {AVAILABILITY_OPTIONS.map(option => (
-                  <label key={option.value} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="availability"
-                      value={option.value}
-                      checked={filters.availability === option.value}
-                      onChange={e =>
-                        updateFilters('availability', e.target.value)
-                      }
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="ml-2 flex items-center text-sm text-gray-700">
-                      <span
-                        className={`mr-2 h-2 w-2 rounded-full ${
-                          option.color === 'green'
-                            ? 'bg-green-500'
-                            : 'bg-blue-500'
-                        }`}
+                <div className="space-y-2">
+                  {AVAILABILITY_OPTIONS.map(option => (
+                    <label
+                      key={option.value}
+                      className="flex cursor-pointer items-center space-x-2"
+                    >
+                      <input
+                        type="radio"
+                        name="availability"
+                        value={option.value}
+                        checked={filters.availability === option.value}
+                        onChange={e =>
+                          updateFilters('availability', e.target.value)
+                        }
+                        className="border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
-                      {option.label}
-                    </span>
-                  </label>
-                ))}
-                {filters.availability && (
-                  <button
-                    onClick={() => updateFilters('availability', '')}
-                    className="text-sm text-indigo-600 hover:text-indigo-700"
-                  >
-                    Clear selection
-                  </button>
-                )}
+                      <span className="text-sm text-gray-700">
+                        {option.label}
+                      </span>
+                      <span
+                        className={`h-2 w-2 rounded-full bg-${option.color}-500`}
+                      />
+                    </label>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* SA Salary Range */}
+        {/* Salary Range Filter */}
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('salary')}
             className="flex w-full items-center justify-between text-left"
           >
-            <h3 className="font-medium text-gray-900">SA Salary Range</h3>
+            <h3 className="font-medium text-gray-900">Salary Range</h3>
             <ChevronDown
               className={`h-4 w-4 text-gray-500 transition-transform ${
                 openSections.salary ? 'rotate-180' : ''
@@ -552,95 +577,38 @@ const TalentFilters = ({
           <AnimatePresence>
             {openSections.salary && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {SA_SALARY_RANGES.map(range => (
-                  <label key={range.value} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="salary"
-                      value={range.value}
-                      checked={filters.salary === range.value}
-                      onChange={e => updateFilters('salary', e.target.value)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="ml-2 flex items-center text-sm text-gray-700">
-                      <DollarSign className="mr-1 h-3 w-3" />
-                      {range.label}
-                    </span>
-                  </label>
-                ))}
-                {filters.salary && (
-                  <button
-                    onClick={() => updateFilters('salary', '')}
-                    className="text-sm text-indigo-600 hover:text-indigo-700"
-                  >
-                    Clear selection
-                  </button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
-        {/* Company Filter */}
-        <div className="space-y-3">
-          <button
-            onClick={() => toggleSection('company')}
-            className="flex w-full items-center justify-between text-left"
-          >
-            <h3 className="font-medium text-gray-900">SA Companies</h3>
-            <ChevronDown
-              className={`h-4 w-4 text-gray-500 transition-transform ${
-                openSections.company ? 'rotate-180' : ''
-              }`}
-            />
-          </button>
-
-          <AnimatePresence>
-            {openSections.company && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-3"
-              >
-                <div className="relative">
-                  <Briefcase className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="Enter company name..."
-                    value={filters.company || ''}
-                    onChange={e => updateFilters('company', e.target.value)}
-                    className="w-full rounded-md border border-gray-300 py-2 pr-4 pl-10 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-500">
-                    Top SA tech companies:
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {saUtils.SA_TECH_COMPANIES.map(company => (
-                      <button
-                        key={company}
-                        onClick={() => updateFilters('company', company)}
-                        className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-600 hover:bg-gray-200"
-                      >
-                        {company}
-                      </button>
-                    ))}
-                  </div>
+                <div className="space-y-2">
+                  {SA_SALARY_RANGES.map(range => (
+                    <label
+                      key={range.value}
+                      className="flex cursor-pointer items-center space-x-2"
+                    >
+                      <input
+                        type="radio"
+                        name="salary"
+                        value={range.value}
+                        checked={filters.salary === range.value}
+                        onChange={e => updateFilters('salary', e.target.value)}
+                        className="border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {range.label}
+                      </span>
+                    </label>
+                  ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Rating */}
+        {/* Rating Filter */}
         <div className="space-y-3">
           <button
             onClick={() => toggleSection('rating')}
@@ -657,45 +625,49 @@ const TalentFilters = ({
           <AnimatePresence>
             {openSections.rating && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="space-y-2"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
               >
-                {RATING_OPTIONS.map(rating => (
-                  <label key={rating.value} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="rating"
-                      value={rating.value}
-                      checked={filters.minRating === rating.value}
-                      onChange={e => updateFilters('minRating', e.target.value)}
-                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500"
-                    />
-                    <span className="ml-2 flex items-center text-sm text-gray-700">
-                      <Star className="mr-1 h-3 w-3 fill-yellow-400 text-yellow-400" />
-                      {rating.label}
-                    </span>
-                  </label>
-                ))}
-                {filters.minRating && (
-                  <button
-                    onClick={() => updateFilters('minRating', '')}
-                    className="text-sm text-indigo-600 hover:text-indigo-700"
-                  >
-                    Clear selection
-                  </button>
-                )}
+                <div className="space-y-2">
+                  {RATING_OPTIONS.map(rating => (
+                    <label
+                      key={rating.value}
+                      className="flex cursor-pointer items-center space-x-2"
+                    >
+                      <input
+                        type="radio"
+                        name="minRating"
+                        value={rating.value}
+                        checked={filters.minRating === rating.value}
+                        onChange={e =>
+                          updateFilters('minRating', e.target.value)
+                        }
+                        className="border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                      />
+                      <span className="text-sm text-gray-700">
+                        {rating.label}
+                      </span>
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3 w-3 ${
+                              i < parseFloat(rating.value)
+                                ? 'fill-yellow-400 text-yellow-400'
+                                : 'text-gray-300'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </label>
+                  ))}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
-
-        {/* Mobile Apply Button */}
-        <div className="border-t border-gray-200 pt-4 lg:hidden">
-          <Button onClick={onClose} className="w-full">
-            Apply Filters
-          </Button>
         </div>
       </div>
     </motion.div>
